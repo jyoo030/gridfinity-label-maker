@@ -10,6 +10,9 @@ import {
   TextField,
   Button,
 } from '@mui/material';
+import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
+import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter';
+import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight';
 import { toPng } from 'html-to-image';
 import { calculatePixelDimensions } from '../utils/calculations';
 
@@ -23,6 +26,8 @@ const iconOptions = {
 const fonts = ['Arial', 'Roboto', 'Helvetica', 'Times New Roman'];
 
 const tapeWidthOptions = [6, 9, 12, 18, 24, 36];
+
+const fontSizeOptions = [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 72];
 
 function LabelMaker() {
   const [config, setConfig] = useState({
@@ -49,12 +54,13 @@ function LabelMaker() {
       rawLinesInput: '1',
       lineContents: [{
         text: '',
-        fontSize: 8,
-        rawFontSize: '8',
+        fontSize: 12,
+        rawFontSize: '12',
         strikethrough: false,
         underline: false,
         bold: false,
         italic: false,
+        textAlign: 'left',
       }],
     },
   });
@@ -104,12 +110,13 @@ function LabelMaker() {
         lineContents: Array(numLines).fill(null).map((_, idx) => 
           prev.text.lineContents[idx] || {
             text: '',
-            fontSize: 8,
-            rawFontSize: '8',
+            fontSize: 12,
+            rawFontSize: '12',
             strikethrough: false,
             underline: false,
             bold: false,
             italic: false,
+            textAlign: 'left',
           }
         ),
       },
@@ -321,36 +328,38 @@ function LabelMaker() {
                   }}
                 >
 
-                  <TextField
-                    type="number"
-                    label="Size"
-                    variant="outlined"
-                    value={config.text.lineContents[index]?.rawFontSize === '0' ? '' : config.text.lineContents[index]?.rawFontSize}
-                    onChange={(e) => handleLineStyleChange(
-                      index, 
-                      'fontSize', 
-                      e.target.value === '' ? 0 : Number(e.target.value),
-                      'rawFontSize'
-                    )}
-                    slotProps={{
-                      input: {
-                        min: 1,
-                        max: 72
-                      }
-                    }}
-                    sx={{ 
-                      width: '80px',
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 0,
+                  <FormControl variant="outlined">
+                    <InputLabel id={`font-size-label-${index}`}>Size</InputLabel>
+                    <Select
+                      labelId={`font-size-label-${index}`}
+                      label="Size"
+                      value={config.text.lineContents[index]?.fontSize || 8}
+                      onChange={(e) => handleLineStyleChange(
+                        index, 
+                        'fontSize', 
+                        Number(e.target.value),
+                        'rawFontSize'
+                      )}
+                      sx={{ 
+                        width: '80px',
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 0,
+                        },
                         '& fieldset': {
                           border: 'none',
                         },
-                      },
-                      '& .MuiInputLabel-root': {
-                        bgcolor: 'background.paper',
-                      },
-                    }}
-                  />
+                        '& .MuiSelect-select': {
+                          py: 2,
+                        },
+                      }}
+                    >
+                      {fontSizeOptions.map((size) => (
+                        <MenuItem key={size} value={size}>
+                          {size}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
                   <Box
                     sx={{
                       display: 'flex',
@@ -359,6 +368,45 @@ function LabelMaker() {
                       borderColor: 'divider',
                     }}
                   >
+                    <Button
+                      variant={config.text.lineContents[index]?.textAlign === 'left' ? "contained" : "text"}
+                      onClick={() => handleLineStyleChange(index, 'textAlign', 'left')}
+                      sx={{ 
+                        minWidth: '40px',
+                        borderRadius: 0,
+                        px: 2,
+                        borderRight: 1,
+                        borderColor: 'divider',
+                      }}
+                    >
+                      <FormatAlignLeftIcon />
+                    </Button>
+                    <Button
+                      variant={config.text.lineContents[index]?.textAlign === 'center' ? "contained" : "text"}
+                      onClick={() => handleLineStyleChange(index, 'textAlign', 'center')}
+                      sx={{ 
+                        minWidth: '40px',
+                        borderRadius: 0,
+                        px: 2,
+                        borderRight: 1,
+                        borderColor: 'divider',
+                      }}
+                    >
+                      <FormatAlignCenterIcon />
+                    </Button>
+                    <Button
+                      variant={config.text.lineContents[index]?.textAlign === 'right' ? "contained" : "text"}
+                      onClick={() => handleLineStyleChange(index, 'textAlign', 'right')}
+                      sx={{ 
+                        minWidth: '40px',
+                        borderRadius: 0,
+                        px: 2,
+                        borderRight: 1,
+                        borderColor: 'divider',
+                      }}
+                    >
+                      <FormatAlignRightIcon />
+                    </Button>
                     <Button
                       variant={config.text.lineContents[index]?.bold ? "contained" : "text"}
                       onClick={() => handleLineStyleChange(index, 'bold', !config.text.lineContents[index]?.bold)}
@@ -404,7 +452,7 @@ function LabelMaker() {
                       sx={{ 
                         minWidth: '40px',
                         borderRadius: 0,
-                        borderRight: 1,
+                        borderRight: 0,
                         borderColor: 'divider',
                         px: 2,
                       }}
@@ -453,7 +501,7 @@ function LabelMaker() {
               }} 
             />
           )}
-          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
             {config.text.lineContents.map((line, index) => (
               <Typography
                 key={index}
@@ -467,6 +515,8 @@ function LabelMaker() {
                     line.strikethrough && 'line-through'
                   ].filter(Boolean).join(' '),
                   marginBottom: index < config.text.lines - 1 ? '2px' : 0,
+                  textAlign: line.textAlign,
+                  width: '100%',
                 }}
               >
                 {line.text || `Line ${index + 1}`}
@@ -505,7 +555,7 @@ function LabelMaker() {
               }} 
             />
           )}
-          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
             {config.text.lineContents.map((line, index) => (
               <Typography
                 key={index}
@@ -519,6 +569,8 @@ function LabelMaker() {
                     line.strikethrough && 'line-through'
                   ].filter(Boolean).join(' '),
                   marginBottom: index < config.text.lines - 1 ? '2px' : 0,
+                  textAlign: line.textAlign,
+                  width: '100%',
                 }}
               >
                 {line.text || `Line ${index + 1}`}
