@@ -482,12 +482,13 @@ function LabelMaker() {
           sx={{
             width: dimensions.height,
             height: dimensions.width,
-            border: '1px solid #ccc',
+            border: '1px solid #44475a',
             borderRadius: 1,
             display: 'flex',
             alignItems: 'center',
             p: 1,
             mb: 3,
+            bgcolor: '#f8f8f2',
           }}
         >
           {config.icon.type !== 'None' && (
@@ -517,60 +518,7 @@ function LabelMaker() {
                   marginBottom: index < config.text.lines - 1 ? '2px' : 0,
                   textAlign: line.textAlign,
                   width: '100%',
-                }}
-              >
-                {line.text || `Line ${index + 1}`}
-              </Typography>
-            ))}
-          </Box>
-        </Box>
-
-        {/* Scaled preview */}
-        <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-          Enlarged Preview (Scaled for visibility)
-        </Typography>
-        <Box
-          sx={{
-            width: dimensions.height,
-            height: dimensions.width,
-            border: '1px solid #ccc',
-            borderRadius: 1,
-            display: 'flex',
-            alignItems: 'center',
-            p: 1,
-            mb: 2,
-            transform: `scale(${Math.min(2, 300 / dimensions.height)})`,
-            transformOrigin: 'left top',
-            marginBottom: `${dimensions.width * Math.min(2, 300 / dimensions.height) + 16}px`,
-          }}
-        >
-          {config.icon.type !== 'None' && (
-            <Box 
-              sx={{ 
-                width: dimensions.width * 0.8,
-                height: dimensions.width * 0.8,
-                bgcolor: '#ccc',
-                mr: 1,
-                flexShrink: 0
-              }} 
-            />
-          )}
-          <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-            {config.text.lineContents.map((line, index) => (
-              <Typography
-                key={index}
-                style={{
-                  fontFamily: config.text.font,
-                  fontSize: `${line.fontSize}px`,
-                  fontWeight: line.bold ? 'bold' : 'normal',
-                  fontStyle: line.italic ? 'italic' : 'normal',
-                  textDecoration: [
-                    line.underline && 'underline',
-                    line.strikethrough && 'line-through'
-                  ].filter(Boolean).join(' '),
-                  marginBottom: index < config.text.lines - 1 ? '2px' : 0,
-                  textAlign: line.textAlign,
-                  width: '100%',
+                  color: '#282a36',
                 }}
               >
                 {line.text || `Line ${index + 1}`}
