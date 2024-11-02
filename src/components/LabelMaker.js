@@ -17,10 +17,12 @@ const iconOptions = {
   types: ['Screws', 'Nuts', 'Washers'],
   sizes: ['M2', 'M3', 'M4', 'M5', 'M6'],
   heads: ['Flat', 'Socket', 'Button'],
-  drives: ['Hex', 'Phillips', 'Minus'],
+  drives: ['Hex', 'Phillips', 'Flat Head'],
 };
 
 const fonts = ['Arial', 'Roboto', 'Helvetica', 'Times New Roman'];
+
+const tapeWidthOptions = [6, 9, 12, 18, 24, 36];
 
 function LabelMaker() {
   const [config, setConfig] = useState({
@@ -41,12 +43,18 @@ function LabelMaker() {
     },
     text: {
       font: 'Arial',
-      fontSize: 8,
       lines: 1,
       horizontalAlign: 'left',
       verticalAlign: 'center',
-      lineContents: [''],
       rawLinesInput: '1',
+      lineContents: [{
+        text: '',
+        fontSize: 8,
+        strikethrough: false,
+        underline: false,
+        bold: false,
+        italic: false,
+      }],
     },
   });
 
@@ -81,15 +89,7 @@ function LabelMaker() {
   };
 
   const handleLineTextChange = (lineIndex, value) => {
-    setConfig(prev => ({
-      ...prev,
-      text: {
-        ...prev.text,
-        lineContents: prev.text.lineContents.map((content, idx) =>
-          idx === lineIndex ? value : content
-        ),
-      },
-    }));
+    handleLineStyleChange(lineIndex, 'text', value);
   };
 
   const handleLinesChange = (newLines) => {
@@ -100,8 +100,15 @@ function LabelMaker() {
         ...prev.text,
         lines: numLines,
         rawLinesInput: newLines,
-        lineContents: Array(numLines).fill('').map((_, idx) => 
-          prev.text.lineContents[idx] || ''
+        lineContents: Array(numLines).fill(null).map((_, idx) => 
+          prev.text.lineContents[idx] || {
+            text: '',
+            fontSize: 8,
+            strikethrough: false,
+            underline: false,
+            bold: false,
+            italic: false,
+          }
         ),
       },
     }));
@@ -114,6 +121,20 @@ function LabelMaker() {
         ...prev.printer,
         [rawField]: value,
         [field]: value === '' ? 0 : Number(value),
+      },
+    }));
+  };
+
+  const handleLineStyleChange = (lineIndex, field, value) => {
+    setConfig(prev => ({
+      ...prev,
+      text: {
+        ...prev.text,
+        lineContents: prev.text.lineContents.map((content, idx) =>
+          idx === lineIndex
+            ? { ...content, [field]: value }
+            : content
+        ),
       },
     }));
   };
@@ -149,14 +170,21 @@ function LabelMaker() {
               onChange={(e) => handlePrinterChange('dpi', 'rawDpi', e.target.value)}
               inputProps={{ min: 100, max: 600 }}
             />
-            <TextField
-              fullWidth
-              type="number"
-              label="Tape Width (mm)"
-              value={config.printer.rawTapeWidth}
-              onChange={(e) => handlePrinterChange('tapeWidthMm', 'rawTapeWidth', e.target.value)}
-              inputProps={{ min: 8, max: 16 }}
-            />
+            <FormControl fullWidth variant="outlined">
+              <InputLabel id="tape-width-label">Tape Width (mm)</InputLabel>
+              <Select
+                labelId="tape-width-label"
+                label="Tape Width (mm)"
+                value={config.printer.tapeWidthMm}
+                onChange={(e) => handlePrinterChange('tapeWidthMm', 'rawTapeWidth', e.target.value)}
+              >
+                {tapeWidthOptions.map((width) => (
+                  <MenuItem key={width} value={width}>
+                    {width} mm
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <TextField
               fullWidth
               type="number"
@@ -178,9 +206,11 @@ function LabelMaker() {
           </Typography>
           <Stack spacing={2}>
             {Object.entries(iconOptions).map(([key, options]) => (
-              <FormControl key={key} fullWidth>
-                <InputLabel>{key.charAt(0).toUpperCase() + key.slice(1)}</InputLabel>
+              <FormControl key={key} fullWidth variant="outlined">
+                <InputLabel id={`${key}-label`}>{key.charAt(0).toUpperCase() + key.slice(1)}</InputLabel>
                 <Select
+                  labelId={`${key}-label`}
+                  label={key.charAt(0).toUpperCase() + key.slice(1)}
                   value={config.icon[key.replace('s', '')]}
                   onChange={(e) => handleConfigChange('icon', key.replace('s', ''), e.target.value)}
                 >
@@ -208,9 +238,11 @@ function LabelMaker() {
             Text Settings
           </Typography>
           <Stack spacing={2}>
-            <FormControl fullWidth>
-              <InputLabel>Font</InputLabel>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel id="font-label">Font</InputLabel>
               <Select
+                labelId="font-label"
+                label="Font"
                 value={config.text.font}
                 onChange={(e) => handleConfigChange('text', 'font', e.target.value)}
               >
@@ -224,14 +256,6 @@ function LabelMaker() {
             <TextField
               fullWidth
               type="number"
-              label="Font Size (px)"
-              value={config.text.fontSize}
-              onChange={(e) => handleConfigChange('text', 'fontSize', Number(e.target.value))}
-              inputProps={{ min: 1, max: 72 }}
-            />
-            <TextField
-              fullWidth
-              type="number"
               label="Number of Lines"
               value={config.text.rawLinesInput}
               onChange={(e) => handleLinesChange(e.target.value)}
@@ -239,13 +263,114 @@ function LabelMaker() {
             />
             {/* Dynamic Line Input Fields */}
             {Array.from({ length: config.text.lines }, (_, index) => (
-              <TextField
+              <Box
                 key={`line-${index}`}
-                fullWidth
-                label={`Line ${index + 1}`}
-                value={config.text.lineContents[index] || ''}
-                onChange={(e) => handleLineTextChange(index, e.target.value)}
-              />
+                sx={{
+                  display: 'flex',
+                  alignItems: 'stretch',
+                  gap: 2,
+                }}
+              >
+                <TextField
+                  sx={{ 
+                    flex: 1.2,
+                    '& .MuiOutlinedInput-root': {
+                      height: '100%',
+                    },
+                  }}
+                  label={`Line ${index + 1}`}
+                  value={config.text.lineContents[index]?.text || ''}
+                  onChange={(e) => handleLineTextChange(index, e.target.value)}
+                />
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    width: 'fit-content',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                  }}
+                >
+                  <TextField
+                    type="number"
+                    label="Size"
+                    value={config.text.lineContents[index]?.fontSize || 8}
+                    onChange={(e) => handleLineStyleChange(index, 'fontSize', Number(e.target.value))}
+                    inputProps={{ min: 1, max: 72 }}
+                    sx={{ 
+                      width: '80px',
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 0,
+                        '& fieldset': {
+                          border: 'none',
+                        },
+                      },
+                    }}
+                  />
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      height: '100%',
+                      borderLeft: 1,
+                      borderColor: 'divider',
+                    }}
+                  >
+                    <Button
+                      variant={config.text.lineContents[index]?.bold ? "contained" : "text"}
+                      onClick={() => handleLineStyleChange(index, 'bold', !config.text.lineContents[index]?.bold)}
+                      sx={{ 
+                        minWidth: '40px',
+                        borderRadius: 0,
+                        px: 2,
+                        borderRight: 1,
+                        borderColor: 'divider',
+                      }}
+                    >
+                      B
+                    </Button>
+                    <Button
+                      variant={config.text.lineContents[index]?.italic ? "contained" : "text"}
+                      onClick={() => handleLineStyleChange(index, 'italic', !config.text.lineContents[index]?.italic)}
+                      sx={{ 
+                        minWidth: '40px',
+                        borderRadius: 0,
+                        px: 2,
+                        borderRight: 1,
+                        borderColor: 'divider',
+                      }}
+                    >
+                      I
+                    </Button>
+                    <Button
+                      variant={config.text.lineContents[index]?.underline ? "contained" : "text"}
+                      onClick={() => handleLineStyleChange(index, 'underline', !config.text.lineContents[index]?.underline)}
+                      sx={{ 
+                        minWidth: '40px',
+                        borderRadius: 0,
+                        px: 2,
+                        borderRight: 1,
+                        borderColor: 'divider',
+                      }}
+                    >
+                      U
+                    </Button>
+                    <Button
+                      variant={config.text.lineContents[index]?.strikethrough ? "contained" : "text"}
+                      onClick={() => handleLineStyleChange(index, 'strikethrough', !config.text.lineContents[index]?.strikethrough)}
+                      sx={{ 
+                        minWidth: '40px',
+                        borderRadius: 0,
+                        borderRight: 1,
+                        borderColor: 'divider',
+                        px: 2,
+                      }}
+                    >
+                      S
+                    </Button>
+                  </Box>
+                </Box>
+              </Box>
             ))}
           </Stack>
         </Box>
@@ -259,7 +384,7 @@ function LabelMaker() {
         
         {/* Actual size preview */}
         <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-          Actual Size (1:1)
+          Image Export Preview (1:1)
         </Typography>
         <Box
           ref={previewRef}
@@ -289,11 +414,17 @@ function LabelMaker() {
                 key={index}
                 style={{
                   fontFamily: config.text.font,
-                  fontSize: `${config.text.fontSize}px`,
+                  fontSize: `${line.fontSize}px`,
+                  fontWeight: line.bold ? 'bold' : 'normal',
+                  fontStyle: line.italic ? 'italic' : 'normal',
+                  textDecoration: [
+                    line.underline && 'underline',
+                    line.strikethrough && 'line-through'
+                  ].filter(Boolean).join(' '),
                   marginBottom: index < config.text.lines - 1 ? '2px' : 0,
                 }}
               >
-                {line || `Line ${index + 1}`}
+                {line.text || `Line ${index + 1}`}
               </Typography>
             ))}
           </Box>
@@ -333,11 +464,17 @@ function LabelMaker() {
                 key={index}
                 style={{
                   fontFamily: config.text.font,
-                  fontSize: `${config.text.fontSize}px`,
+                  fontSize: `${line.fontSize}px`,
+                  fontWeight: line.bold ? 'bold' : 'normal',
+                  fontStyle: line.italic ? 'italic' : 'normal',
+                  textDecoration: [
+                    line.underline && 'underline',
+                    line.strikethrough && 'line-through'
+                  ].filter(Boolean).join(' '),
                   marginBottom: index < config.text.lines - 1 ? '2px' : 0,
                 }}
               >
-                {line || `Line ${index + 1}`}
+                {line.text || `Line ${index + 1}`}
               </Typography>
             ))}
           </Box>
