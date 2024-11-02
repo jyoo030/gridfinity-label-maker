@@ -14,7 +14,7 @@ import { toPng } from 'html-to-image';
 import { calculatePixelDimensions } from '../utils/calculations';
 
 const iconOptions = {
-  types: ['Screws', 'Nuts', 'Washers'],
+  types: ['None', 'Screws', 'Nuts', 'Washers'],
   sizes: ['M2', 'M3', 'M4', 'M5', 'M6'],
   heads: ['Flat', 'Socket', 'Button'],
   drives: ['Hex', 'Phillips', 'Flat Head'],
@@ -50,6 +50,7 @@ function LabelMaker() {
       lineContents: [{
         text: '',
         fontSize: 8,
+        rawFontSize: '8',
         strikethrough: false,
         underline: false,
         bold: false,
@@ -73,10 +74,10 @@ function LabelMaker() {
   const exportImage = async () => {
     if (previewRef.current) {
       const dataUrl = await toPng(previewRef.current, {
-        width: dimensions.width,
-        height: dimensions.height,
+        width: dimensions.height,
+        height: dimensions.width,
         style: {
-          transform: 'scale(1)', // Remove preview scaling for export
+          transform: 'scale(1)',
           margin: 0,
           padding: 0,
         }
@@ -104,6 +105,7 @@ function LabelMaker() {
           prev.text.lineContents[idx] || {
             text: '',
             fontSize: 8,
+            rawFontSize: '8',
             strikethrough: false,
             underline: false,
             bold: false,
@@ -125,14 +127,18 @@ function LabelMaker() {
     }));
   };
 
-  const handleLineStyleChange = (lineIndex, field, value) => {
+  const handleLineStyleChange = (lineIndex, field, value, rawField) => {
     setConfig(prev => ({
       ...prev,
       text: {
         ...prev.text,
         lineContents: prev.text.lineContents.map((content, idx) =>
           idx === lineIndex
-            ? { ...content, [field]: value }
+            ? { 
+                ...content, 
+                [field]: value,
+                ...(rawField && { [rawField]: value.toString() })
+              }
             : content
         ),
       },
@@ -205,30 +211,52 @@ function LabelMaker() {
             Icon Settings
           </Typography>
           <Stack spacing={2}>
-            {Object.entries(iconOptions).map(([key, options]) => (
-              <FormControl key={key} fullWidth variant="outlined">
-                <InputLabel id={`${key}-label`}>{key.charAt(0).toUpperCase() + key.slice(1)}</InputLabel>
-                <Select
-                  labelId={`${key}-label`}
-                  label={key.charAt(0).toUpperCase() + key.slice(1)}
-                  value={config.icon[key.replace('s', '')]}
-                  onChange={(e) => handleConfigChange('icon', key.replace('s', ''), e.target.value)}
-                >
-                  {options.map((option) => (
-                    <MenuItem key={option} value={option}>
-                      {option}
-                    </MenuItem>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel id="types-label">Types</InputLabel>
+              <Select
+                labelId="types-label"
+                label="Types"
+                value={config.icon.type}
+                onChange={(e) => handleConfigChange('icon', 'type', e.target.value)}
+              >
+                {iconOptions.types.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            
+            {config.icon.type !== 'None' && (
+              <>
+                {Object.entries(iconOptions)
+                  .filter(([key]) => key !== 'types') // Skip the types dropdown since it's already shown
+                  .map(([key, options]) => (
+                    <FormControl key={key} fullWidth variant="outlined">
+                      <InputLabel id={`${key}-label`}>{key.charAt(0).toUpperCase() + key.slice(1)}</InputLabel>
+                      <Select
+                        labelId={`${key}-label`}
+                        label={key.charAt(0).toUpperCase() + key.slice(1)}
+                        value={config.icon[key.replace('s', '')]}
+                        onChange={(e) => handleConfigChange('icon', key.replace('s', ''), e.target.value)}
+                      >
+                        {options.map((option) => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
                   ))}
-                </Select>
-              </FormControl>
-            ))}
-            <TextField
-              fullWidth
-              type="number"
-              label="Length (mm)"
-              value={config.icon.length}
-              onChange={(e) => handleConfigChange('icon', 'length', e.target.value)}
-            />
+                <TextField
+                  fullWidth
+                  type="number"
+                  label="Length (mm)"
+                  value={config.icon.length}
+                  onChange={(e) => handleConfigChange('icon', 'length', e.target.value)}
+                />
+              </>
+            )}
           </Stack>
         </Box>
 
@@ -292,12 +320,24 @@ function LabelMaker() {
                     borderRadius: 1,
                   }}
                 >
+
                   <TextField
                     type="number"
                     label="Size"
-                    value={config.text.lineContents[index]?.fontSize || 8}
-                    onChange={(e) => handleLineStyleChange(index, 'fontSize', Number(e.target.value))}
-                    inputProps={{ min: 1, max: 72 }}
+                    variant="outlined"
+                    value={config.text.lineContents[index]?.rawFontSize === '0' ? '' : config.text.lineContents[index]?.rawFontSize}
+                    onChange={(e) => handleLineStyleChange(
+                      index, 
+                      'fontSize', 
+                      e.target.value === '' ? 0 : Number(e.target.value),
+                      'rawFontSize'
+                    )}
+                    slotProps={{
+                      input: {
+                        min: 1,
+                        max: 72
+                      }
+                    }}
                     sx={{ 
                       width: '80px',
                       '& .MuiOutlinedInput-root': {
@@ -305,6 +345,9 @@ function LabelMaker() {
                         '& fieldset': {
                           border: 'none',
                         },
+                      },
+                      '& .MuiInputLabel-root': {
+                        bgcolor: 'background.paper',
                       },
                     }}
                   />
@@ -399,15 +442,17 @@ function LabelMaker() {
             mb: 3,
           }}
         >
-          <Box 
-            sx={{ 
-              width: dimensions.width * 0.8,
-              height: dimensions.width * 0.8,
-              bgcolor: '#ccc',
-              mr: 1,
-              flexShrink: 0
-            }} 
-          />
+          {config.icon.type !== 'None' && (
+            <Box 
+              sx={{ 
+                width: dimensions.width * 0.8,
+                height: dimensions.width * 0.8,
+                bgcolor: '#ccc',
+                mr: 1,
+                flexShrink: 0
+              }} 
+            />
+          )}
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             {config.text.lineContents.map((line, index) => (
               <Typography
@@ -449,15 +494,17 @@ function LabelMaker() {
             marginBottom: `${dimensions.width * Math.min(2, 300 / dimensions.height) + 16}px`,
           }}
         >
-          <Box 
-            sx={{ 
-              width: dimensions.width * 0.8,
-              height: dimensions.width * 0.8,
-              bgcolor: '#ccc',
-              mr: 1,
-              flexShrink: 0
-            }} 
-          />
+          {config.icon.type !== 'None' && (
+            <Box 
+              sx={{ 
+                width: dimensions.width * 0.8,
+                height: dimensions.width * 0.8,
+                bgcolor: '#ccc',
+                mr: 1,
+                flexShrink: 0
+              }} 
+            />
+          )}
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             {config.text.lineContents.map((line, index) => (
               <Typography
@@ -481,7 +528,7 @@ function LabelMaker() {
         </Box>
 
         <Button variant="contained" onClick={exportImage}>
-          Export as PNG ({dimensions.width}×{dimensions.height})
+          Export as PNG ({dimensions.height}×{dimensions.width})
         </Button>
       </Box>
     </Stack>
