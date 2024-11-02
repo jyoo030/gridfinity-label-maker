@@ -236,32 +236,65 @@ function LabelMaker() {
             
             {config.icon.type !== 'None' && (
               <>
-                {Object.entries(iconOptions)
-                  .filter(([key]) => key !== 'types') // Skip the types dropdown since it's already shown
-                  .map(([key, options]) => (
-                    <FormControl key={key} fullWidth variant="outlined">
-                      <InputLabel id={`${key}-label`}>{key.charAt(0).toUpperCase() + key.slice(1)}</InputLabel>
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel id="sizes-label">Sizes</InputLabel>
+                  <Select
+                    labelId="sizes-label"
+                    label="Sizes"
+                    value={config.icon.size}
+                    onChange={(e) => handleConfigChange('icon', 'size', e.target.value)}
+                  >
+                    {iconOptions.sizes.map((option) => (
+                      <MenuItem key={option} value={option}>
+                        {option}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                {config.icon.type === 'Screws' && (
+                  <>
+                    <FormControl fullWidth variant="outlined">
+                      <InputLabel id="heads-label">Heads</InputLabel>
                       <Select
-                        labelId={`${key}-label`}
-                        label={key.charAt(0).toUpperCase() + key.slice(1)}
-                        value={config.icon[key.replace('s', '')]}
-                        onChange={(e) => handleConfigChange('icon', key.replace('s', ''), e.target.value)}
+                        labelId="heads-label"
+                        label="Heads"
+                        value={config.icon.head}
+                        onChange={(e) => handleConfigChange('icon', 'head', e.target.value)}
                       >
-                        {options.map((option) => (
+                        {iconOptions.heads.map((option) => (
                           <MenuItem key={option} value={option}>
                             {option}
                           </MenuItem>
                         ))}
                       </Select>
                     </FormControl>
-                  ))}
-                <TextField
-                  fullWidth
-                  type="number"
-                  label="Length (mm)"
-                  value={config.icon.length}
-                  onChange={(e) => handleConfigChange('icon', 'length', e.target.value)}
-                />
+
+                    <FormControl fullWidth variant="outlined">
+                      <InputLabel id="drives-label">Drives</InputLabel>
+                      <Select
+                        labelId="drives-label"
+                        label="Drives"
+                        value={config.icon.drive}
+                        onChange={(e) => handleConfigChange('icon', 'drive', e.target.value)}
+                      >
+                        {iconOptions.drives.map((option) => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+
+                    <TextField
+                      fullWidth
+                      type="number"
+                      label="Length (mm)"
+                      value={config.icon.length}
+                      onChange={(e) => handleConfigChange('icon', 'length', e.target.value)}
+                    />
+                  </>
+                )}
               </>
             )}
           </Stack>
@@ -470,13 +503,10 @@ function LabelMaker() {
       {/* Preview Section */}
       <Box>
         <Typography variant="h6" gutterBottom>
-          Preview
+          Label Preview
         </Typography>
         
         {/* Actual size preview */}
-        <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-          Image Export Preview (1:1)
-        </Typography>
         <Box
           ref={previewRef}
           sx={{
