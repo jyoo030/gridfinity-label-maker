@@ -234,7 +234,7 @@ function LabelMaker() {
     <Stack spacing={3}>
       <Box>
         <Typography variant="h4" gutterBottom>
-          Label Maker
+          Gridfinity Label Generator
         </Typography>
       </Box>
 
