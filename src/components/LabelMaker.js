@@ -16,19 +16,32 @@ import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
 import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter';
 import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight';
 import TripOriginIcon from '@mui/icons-material/TripOrigin';
-import HexagonOutlinedIcon from '@mui/icons-material/HexagonOutlined';
-import AddCircleOutlinedIcon from '@mui/icons-material/AddCircleOutlined';
-import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
-import HexagonTwoToneIcon from '@mui/icons-material/HexagonTwoTone';
 import { toPng } from 'html-to-image';
 import { calculatePixelDimensions } from '../utils/calculations';
 import UploadIcon from '@mui/icons-material/Upload';
+import {
+  PhillipsDrive,
+  SlottedDrive,
+  HexDrive,
+  SquareDrive,
+  TorxDrive,
+} from '../images/drivers';
+
+import {
+  FlatHead,
+  HexHead,
+  ButtonHead,
+  PanHead,
+  RoundHead,
+} from '../images/heads';
+
+import NutIcon from '../images/nut.svg';
 
 const iconOptions = {
   types: ['None', 'Screws', 'Nuts', 'Washers'],
-  sizes: ['M2', 'M3', 'M4', 'M5', 'M6'],
-  heads: ['Flat', 'Socket', 'Button'],
-  drives: ['Hex', 'Phillips', 'Slotted'],
+  sizes: ['M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'M10', 'M12', 'M14', 'M16', 'M18', 'M20'],
+  heads: ['Flat', 'Hex', 'Button', 'Pan', 'Round'],
+  drives: ['Hex', 'Phillips', 'Slotted', 'Square', 'Torx'],
 };
 
 const fonts = ['Arial', 'Roboto', 'Helvetica', 'Times New Roman'];
@@ -37,8 +50,25 @@ const tapeWidthOptions = [6, 9, 12, 18, 24, 36];
 
 const fontSizeOptions = [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 72];
 
-// Add a function to get the correct icon component
-const getIconComponent = (iconType, drive, customIcon) => {
+// Create mappings for the SVG files
+const driveIcons = {
+  Phillips: PhillipsDrive,
+  Slotted: SlottedDrive,
+  Hex: HexDrive,
+  Square: SquareDrive,
+  Torx: TorxDrive,
+};
+
+const headIcons = {
+  Flat: FlatHead,
+  Hex: HexHead,
+  Button: ButtonHead,
+  Pan: PanHead,
+  Round: RoundHead,
+};
+
+// Update the getIconComponent function
+const getIconComponent = (iconType, drive, head, customIcon) => {
   if (customIcon) {
     return (
       <Box
@@ -58,18 +88,39 @@ const getIconComponent = (iconType, drive, customIcon) => {
     case 'Washers':
       return <TripOriginIcon sx={{ width: '100%', height: '100%' }} />;
     case 'Nuts':
-      return <HexagonOutlinedIcon sx={{ width: '100%', height: '100%' }} />;
+      return (
+        <Box
+          component="img"
+          src={NutIcon}
+          alt="Nut icon"
+          sx={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+          }}
+        />
+      );
     case 'Screws':
-      switch (drive) {
-        case 'Phillips':
-          return <AddCircleOutlinedIcon sx={{ width: '100%', height: '100%' }} />;
-        case 'Slotted':
-          return <RemoveCircleIcon sx={{ width: '100%', height: '100%' }} />;
-        case 'Hex':
-          return <HexagonTwoToneIcon sx={{ width: '100%', height: '100%' }} />;
-        default:
-          return null;
+      // Use drive SVG if available, otherwise use head SVG
+      const driveIcon = driveIcons[drive];
+      const headIcon = headIcons[head];
+      const iconToUse = driveIcon || headIcon;
+      
+      if (iconToUse) {
+        return (
+          <Box
+            component="img"
+            src={iconToUse}
+            alt={`${drive || head} icon`}
+            sx={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+            }}
+          />
+        );
       }
+      return null;
     default:
       return null;
   }
@@ -261,7 +312,7 @@ function LabelMaker() {
 
   const handleCustomIconUpload = (event) => {
     const file = event.target.files[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file && (file.type === 'image/svg+xml' || file.type.startsWith('image/'))) {
       const reader = new FileReader();
       reader.onload = (e) => {
         handleConfigChange('icon', 'customIcon', e.target.result);
@@ -420,7 +471,7 @@ function LabelMaker() {
                   <input
                     type="file"
                     hidden
-                    accept="image/*"
+                    accept="image/svg+xml,image/*"
                     onChange={handleCustomIconUpload}
                   />
                 </Button>
@@ -698,7 +749,7 @@ function LabelMaker() {
                 color: '#282a36',
               }} 
             >
-              {getIconComponent(config.icon.type, config.icon.drive, config.icon.customIcon)}
+              {getIconComponent(config.icon.type, config.icon.drive, config.icon.head, config.icon.customIcon)}
             </Box>
           )}
           <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
