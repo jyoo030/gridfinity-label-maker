@@ -22,6 +22,7 @@ import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 import HexagonTwoToneIcon from '@mui/icons-material/HexagonTwoTone';
 import { toPng } from 'html-to-image';
 import { calculatePixelDimensions } from '../utils/calculations';
+import UploadIcon from '@mui/icons-material/Upload';
 
 const iconOptions = {
   types: ['None', 'Screws', 'Nuts', 'Washers'],
@@ -37,7 +38,22 @@ const tapeWidthOptions = [6, 9, 12, 18, 24, 36];
 const fontSizeOptions = [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 72];
 
 // Add a function to get the correct icon component
-const getIconComponent = (iconType, drive) => {
+const getIconComponent = (iconType, drive, customIcon) => {
+  if (customIcon) {
+    return (
+      <Box
+        component="img"
+        src={customIcon}
+        alt="Custom icon"
+        sx={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+        }}
+      />
+    );
+  }
+
   switch (iconType) {
     case 'Washers':
       return <TripOriginIcon sx={{ width: '100%', height: '100%' }} />;
@@ -89,6 +105,7 @@ function LabelMaker() {
       head: 'Socket',
       length: 10,
       drive: 'Hex',
+      customIcon: null,
     },
     text: {
       font: 'Arial',
@@ -150,6 +167,15 @@ function LabelMaker() {
 
   const exportImage = async () => {
     if (previewRef.current) {
+      // Wait for custom icon to load if present
+      if (config.icon.customIcon) {
+        const img = new Image();
+        img.src = config.icon.customIcon;
+        await new Promise((resolve) => {
+          img.onload = resolve;
+        });
+      }
+
       const dataUrl = await toPng(previewRef.current, {
         width: dimensions.height,
         height: dimensions.width,
@@ -157,8 +183,11 @@ function LabelMaker() {
           transform: 'scale(1)',
           margin: 0,
           padding: 0,
-        }
+        },
+        cacheBust: true, // Prevent caching issues with images
+        pixelRatio: 1, // Ensure exact pixel dimensions
       });
+
       const link = document.createElement('a');
       link.download = 'label.png';
       link.href = dataUrl;
@@ -230,6 +259,17 @@ function LabelMaker() {
     config.printer.dpi
   );
 
+  const handleCustomIconUpload = (event) => {
+    const file = event.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        handleConfigChange('icon', 'customIcon', e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <Stack spacing={3}>
       <Box>
@@ -297,7 +337,6 @@ function LabelMaker() {
                 value={config.icon.type}
                 onChange={(e) => {
                   handleConfigChange('icon', 'type', e.target.value);
-                  // Reset autofill when changing type
                   handleConfigChange('icon', 'autofill', false);
                 }}
               >
@@ -370,45 +409,58 @@ function LabelMaker() {
                     />
                   </>
                 )}
+
+                <Button
+                  component="label"
+                  variant="outlined"
+                  fullWidth
+                  startIcon={config.icon.customIcon ? null : <UploadIcon />}
+                >
+                  {config.icon.customIcon ? 'Change Custom Icon' : 'Upload Custom Icon'}
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={handleCustomIconUpload}
+                  />
+                </Button>
+
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={config.icon.autofill || false}
+                      onChange={(e) => {
+                        handleConfigChange('icon', 'autofill', e.target.checked);
+                        if (e.target.checked) {
+                          const lines = config.icon.type === 'Screws' ? '2' : '1';
+                          handleLinesChange(lines);
+                          const [line1, line2] = generateAutofillText(config.icon);
+                          setConfig(prev => ({
+                            ...prev,
+                            text: {
+                              ...prev.text,
+                              lines: config.icon.type === 'Screws' ? 2 : 1,
+                              rawLinesInput: lines,
+                              lineContents: [
+                                {
+                                  ...prev.text.lineContents[0],
+                                  text: line1,
+                                },
+                                ...(config.icon.type === 'Screws' ? [{
+                                  ...prev.text.lineContents[1],
+                                  text: line2,
+                                }] : []),
+                              ],
+                            },
+                          }));
+                        }
+                      }}
+                    />
+                  }
+                  label="Autofill label text with icon info"
+                />
               </>
             )}
-
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={config.icon.autofill || false}
-                  onChange={(e) => {
-                    handleConfigChange('icon', 'autofill', e.target.checked);
-                    if (e.target.checked) {
-                      // Set number of lines based on icon type
-                      const lines = config.icon.type === 'Screws' ? '2' : '1';
-                      handleLinesChange(lines);
-                      // Generate and set the text content
-                      const [line1, line2] = generateAutofillText(config.icon);
-                      setConfig(prev => ({
-                        ...prev,
-                        text: {
-                          ...prev.text,
-                          lines: config.icon.type === 'Screws' ? 2 : 1,
-                          rawLinesInput: lines,
-                          lineContents: [
-                            {
-                              ...prev.text.lineContents[0],
-                              text: line1,
-                            },
-                            ...(config.icon.type === 'Screws' ? [{
-                              ...prev.text.lineContents[1],
-                              text: line2,
-                            }] : []),
-                          ],
-                        },
-                      }));
-                    }
-                  }}
-                />
-              }
-              label="Autofill label text with icon info"
-            />
           </Stack>
         </Box>
 
@@ -643,10 +695,10 @@ function LabelMaker() {
                 justifyContent: 'center',
                 mr: 1,
                 flexShrink: 0,
-                color: '#282a36', // Set icon color to match text
+                color: '#282a36',
               }} 
             >
-              {getIconComponent(config.icon.type, config.icon.drive)}
+              {getIconComponent(config.icon.type, config.icon.drive, config.icon.customIcon)}
             </Box>
           )}
           <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
