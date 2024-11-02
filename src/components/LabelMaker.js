@@ -9,6 +9,8 @@ import {
   InputLabel,
   TextField,
   Button,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
 import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter';
@@ -25,7 +27,7 @@ const iconOptions = {
   types: ['None', 'Screws', 'Nuts', 'Washers'],
   sizes: ['M2', 'M3', 'M4', 'M5', 'M6'],
   heads: ['Flat', 'Socket', 'Button'],
-  drives: ['Hex', 'Phillips', 'Flat Head'],
+  drives: ['Hex', 'Phillips', 'Slotted'],
 };
 
 const fonts = ['Arial', 'Roboto', 'Helvetica', 'Times New Roman'];
@@ -45,7 +47,7 @@ const getIconComponent = (iconType, drive) => {
       switch (drive) {
         case 'Phillips':
           return <AddCircleOutlinedIcon sx={{ width: '100%', height: '100%' }} />;
-        case 'Flat Head':
+        case 'Slotted':
           return <RemoveCircleIcon sx={{ width: '100%', height: '100%' }} />;
         case 'Hex':
           return <HexagonTwoToneIcon sx={{ width: '100%', height: '100%' }} />;
@@ -54,6 +56,20 @@ const getIconComponent = (iconType, drive) => {
       }
     default:
       return null;
+  }
+};
+
+// Add this helper function to generate the autofill text
+const generateAutofillText = (icon) => {
+  switch (icon.type) {
+    case 'Screws':
+      return [`${icon.size} × ${icon.length}mm`, `${icon.head} Head ${icon.drive} Screw`];
+    case 'Nuts':
+      return [`${icon.size} Nut`, ''];
+    case 'Washers':
+      return [`${icon.size} Washer`, ''];
+    default:
+      return ['', ''];
   }
 };
 
@@ -96,13 +112,40 @@ function LabelMaker() {
   const previewRef = useRef(null);
 
   const handleConfigChange = (category, field, value) => {
-    setConfig(prev => ({
-      ...prev,
-      [category]: {
-        ...prev[category],
-        [field]: value,
-      },
-    }));
+    setConfig(prev => {
+      const newConfig = {
+        ...prev,
+        [category]: {
+          ...prev[category],
+          [field]: value,
+        },
+      };
+
+      // If changing icon properties and autofill is enabled, update the text
+      if (category === 'icon' && prev.icon.autofill && prev.icon.type === 'Screws') {
+        const [line1, line2] = generateAutofillText(newConfig.icon);
+        return {
+          ...newConfig,
+          text: {
+            ...newConfig.text,
+            lines: 2,
+            rawLinesInput: '2',
+            lineContents: [
+              {
+                ...newConfig.text.lineContents[0],
+                text: line1,
+              },
+              {
+                ...newConfig.text.lineContents[1],
+                text: line2,
+              },
+            ],
+          },
+        };
+      }
+
+      return newConfig;
+    });
   };
 
   const exportImage = async () => {
@@ -252,7 +295,11 @@ function LabelMaker() {
                 labelId="types-label"
                 label="Types"
                 value={config.icon.type}
-                onChange={(e) => handleConfigChange('icon', 'type', e.target.value)}
+                onChange={(e) => {
+                  handleConfigChange('icon', 'type', e.target.value);
+                  // Reset autofill when changing type
+                  handleConfigChange('icon', 'autofill', false);
+                }}
               >
                 {iconOptions.types.map((option) => (
                   <MenuItem key={option} value={option}>
@@ -325,6 +372,43 @@ function LabelMaker() {
                 )}
               </>
             )}
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={config.icon.autofill || false}
+                  onChange={(e) => {
+                    handleConfigChange('icon', 'autofill', e.target.checked);
+                    if (e.target.checked) {
+                      // Set number of lines based on icon type
+                      const lines = config.icon.type === 'Screws' ? '2' : '1';
+                      handleLinesChange(lines);
+                      // Generate and set the text content
+                      const [line1, line2] = generateAutofillText(config.icon);
+                      setConfig(prev => ({
+                        ...prev,
+                        text: {
+                          ...prev.text,
+                          lines: config.icon.type === 'Screws' ? 2 : 1,
+                          rawLinesInput: lines,
+                          lineContents: [
+                            {
+                              ...prev.text.lineContents[0],
+                              text: line1,
+                            },
+                            ...(config.icon.type === 'Screws' ? [{
+                              ...prev.text.lineContents[1],
+                              text: line2,
+                            }] : []),
+                          ],
+                        },
+                      }));
+                    }
+                  }}
+                />
+              }
+              label="Autofill label text with icon info"
+            />
           </Stack>
         </Box>
 
