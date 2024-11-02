@@ -44,7 +44,33 @@ const iconOptions = {
   drives: ['Hex', 'Phillips', 'Slotted', 'Square', 'Torx'],
 };
 
-const fonts = ['Arial', 'Roboto', 'Helvetica', 'Times New Roman'];
+const fonts = [
+  'Arial',
+  'Arial Black',
+  'Calibri',
+  'Cambria',
+  'Century Gothic',
+  'Comic Sans MS',
+  'Consolas',
+  'Courier New',
+  'Franklin Gothic Medium',
+  'Futura',
+  'Georgia',
+  'Gill Sans',
+  'Helvetica',
+  'Impact',
+  'Lucida Console',
+  'Lucida Sans',
+  'Palatino',
+  'Roboto',
+  'Segoe UI',
+  'Tahoma',
+  'Times New Roman',
+  'Trebuchet MS',
+  'Ubuntu',
+  'Verdana',
+  'Open Sans'
+];
 
 const tapeWidthOptions = [6, 9, 12, 18, 24, 36];
 
@@ -68,9 +94,9 @@ const headIcons = {
 };
 
 // Update the getIconComponent function
-const getIconComponent = (iconType, drive, head, customIcon) => {
+const getIconComponent = (iconType, drive, head, customIcon, showHeadIcon, showDriveIcon, showIcon) => {
   if (customIcon) {
-    return (
+    return showIcon ? (
       <Box
         component="img"
         src={customIcon}
@@ -81,14 +107,14 @@ const getIconComponent = (iconType, drive, head, customIcon) => {
           objectFit: 'contain',
         }}
       />
-    );
+    ) : null;
   }
 
   switch (iconType) {
     case 'Washers':
-      return <TripOriginIcon sx={{ width: '100%', height: '100%' }} />;
+      return showIcon ? <TripOriginIcon sx={{ width: '100%', height: '100%' }} /> : null;
     case 'Nuts':
-      return (
+      return showIcon ? (
         <Box
           component="img"
           src={NutIcon}
@@ -99,32 +125,32 @@ const getIconComponent = (iconType, drive, head, customIcon) => {
             objectFit: 'contain',
           }}
         />
-      );
+      ) : null;
     case 'Screws':
       const driveIcon = driveIcons[drive];
       const headIcon = headIcons[head];
       
       return (
         <Stack direction="row" spacing={1} sx={{ width: '100%', height: '100%' }}>
-          {headIcon && (
+          {headIcon && showHeadIcon && (
             <Box
               component="img"
               src={headIcon}
               alt={`${head} head icon`}
               sx={{
-                width: '50%',
+                width: showDriveIcon ? '50%' : '100%',
                 height: '100%',
                 objectFit: 'contain',
               }}
             />
           )}
-          {driveIcon && (
+          {driveIcon && showDriveIcon && (
             <Box
               component="img"
               src={driveIcon}
               alt={`${drive} drive icon`}
               sx={{
-                width: '50%',
+                width: showHeadIcon ? '50%' : '100%',
                 height: '100%',
                 objectFit: 'contain',
               }}
@@ -168,6 +194,9 @@ function LabelMaker() {
       length: 10,
       drive: 'Phillips',
       customIcon: null,
+      showHeadIcon: true,
+      showDriveIcon: true,
+      showIcon: true,
     },
     text: {
       font: 'Arial',
@@ -536,6 +565,39 @@ function LabelMaker() {
                   }
                   label="Autofill label text with icon info"
                 />
+
+                {config.icon.type === 'Screws' ? (
+                  <>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={config.icon.showHeadIcon}
+                          onChange={(e) => handleConfigChange('icon', 'showHeadIcon', e.target.checked)}
+                        />
+                      }
+                      label="Show head icon"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={config.icon.showDriveIcon}
+                          onChange={(e) => handleConfigChange('icon', 'showDriveIcon', e.target.checked)}
+                        />
+                      }
+                      label="Show drive icon"
+                    />
+                  </>
+                ) : config.icon.type !== 'None' && (
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={config.icon.showIcon}
+                        onChange={(e) => handleConfigChange('icon', 'showIcon', e.target.checked)}
+                      />
+                    }
+                    label="Show icon"
+                  />
+                )}
               </>
             )}
           </Stack>
@@ -554,9 +616,37 @@ function LabelMaker() {
                 label="Font"
                 value={config.text.font}
                 onChange={(e) => handleConfigChange('text', 'font', e.target.value)}
+                MenuProps={{
+                  anchorOrigin: {
+                    vertical: 'bottom',
+                    horizontal: 'left',
+                  },
+                  transformOrigin: {
+                    vertical: 'top',
+                    horizontal: 'left',
+                  },
+                  PaperProps: {
+                    style: {
+                      maxHeight: 300,
+                    },
+                  },
+                }}
               >
                 {fonts.map((font) => (
-                  <MenuItem key={font} value={font}>
+                  <MenuItem 
+                    key={font} 
+                    value={font}
+                    sx={{ 
+                      fontFamily: font,
+                      fontSize: '16px',
+                      '&:hover': {
+                        backgroundColor: 'action.hover',
+                      },
+                      '&.Mui-selected': {
+                        backgroundColor: 'action.selected',
+                      },
+                    }}
+                  >
                     {font}
                   </MenuItem>
                 ))}
@@ -778,22 +868,39 @@ function LabelMaker() {
           }}
         >
           {config.icon.type !== 'None' && (
-            <Box 
-              sx={{ 
-                width: dimensions.width * 0.8,
-                height: dimensions.width * 0.8,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                mr: 1,
-                flexShrink: 0,
-                color: '#282a36',
-              }} 
-            >
-              {getIconComponent(config.icon.type, config.icon.drive, config.icon.head, config.icon.customIcon)}
-            </Box>
+            (config.icon.type === 'Screws' ? 
+              (config.icon.showHeadIcon || config.icon.showDriveIcon) : 
+              config.icon.showIcon
+            ) && (
+              <Box 
+                sx={{ 
+                  width: dimensions.width * 0.8,
+                  height: dimensions.width * 0.8,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  mr: 1,
+                  flexShrink: 0,
+                  color: '#282a36',
+                }} 
+              >
+                {getIconComponent(
+                  config.icon.type, 
+                  config.icon.drive, 
+                  config.icon.head, 
+                  config.icon.customIcon,
+                  config.icon.showHeadIcon,
+                  config.icon.showDriveIcon,
+                  config.icon.showIcon
+                )}
+              </Box>
+            )
           )}
-          <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            width: '100%',
+          }}>
             {config.text.lineContents.map((line, index) => (
               <Typography
                 key={index}
