@@ -395,7 +395,7 @@ function LabelMaker() {
               >
                 {tapeWidthOptions.map((width) => (
                   <MenuItem key={width} value={width}>
-                    {width} mm
+                    {width}
                   </MenuItem>
                 ))}
               </Select>
