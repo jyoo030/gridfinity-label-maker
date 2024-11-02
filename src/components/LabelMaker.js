@@ -101,26 +101,37 @@ const getIconComponent = (iconType, drive, head, customIcon) => {
         />
       );
     case 'Screws':
-      // Use drive SVG if available, otherwise use head SVG
       const driveIcon = driveIcons[drive];
       const headIcon = headIcons[head];
-      const iconToUse = driveIcon || headIcon;
       
-      if (iconToUse) {
-        return (
-          <Box
-            component="img"
-            src={iconToUse}
-            alt={`${drive || head} icon`}
-            sx={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-            }}
-          />
-        );
-      }
-      return null;
+      return (
+        <Stack direction="row" spacing={1} sx={{ width: '100%', height: '100%' }}>
+          {headIcon && (
+            <Box
+              component="img"
+              src={headIcon}
+              alt={`${head} head icon`}
+              sx={{
+                width: '50%',
+                height: '100%',
+                objectFit: 'contain',
+              }}
+            />
+          )}
+          {driveIcon && (
+            <Box
+              component="img"
+              src={driveIcon}
+              alt={`${drive} drive icon`}
+              sx={{
+                width: '50%',
+                height: '100%',
+                objectFit: 'contain',
+              }}
+            />
+          )}
+        </Stack>
+      );
     default:
       return null;
   }
