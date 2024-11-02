@@ -141,7 +141,7 @@ const getIconComponent = (iconType, drive, head, customIcon) => {
 const generateAutofillText = (icon) => {
   switch (icon.type) {
     case 'Screws':
-      return [`${icon.size} × ${icon.length}mm`, `${icon.head} Head ${icon.drive} Screw`];
+      return [`${icon.size} × ${icon.length}mm`, `${icon.head} Head ${icon.drive}`];
     case 'Nuts':
       return [`${icon.size} Nut`, ''];
     case 'Washers':
@@ -164,9 +164,9 @@ function LabelMaker() {
     icon: {
       type: 'Screws',
       size: 'M3',
-      head: 'Socket',
+      head: 'Flat',
       length: 10,
-      drive: 'Hex',
+      drive: 'Phillips',
       customIcon: null,
     },
     text: {
@@ -419,6 +419,21 @@ function LabelMaker() {
                     label="Sizes"
                     value={config.icon.size}
                     onChange={(e) => handleConfigChange('icon', 'size', e.target.value)}
+                    MenuProps={{
+                      anchorOrigin: {
+                        vertical: 'bottom',
+                        horizontal: 'left',
+                      },
+                      transformOrigin: {
+                        vertical: 'top',
+                        horizontal: 'left',
+                      },
+                      PaperProps: {
+                        style: {
+                          maxHeight: 200,
+                        },
+                      },
+                    }}
                   >
                     {iconOptions.sizes.map((option) => (
                       <MenuItem key={option} value={option}>
@@ -599,6 +614,21 @@ function LabelMaker() {
                         Number(e.target.value),
                         'rawFontSize'
                       )}
+                      MenuProps={{
+                        anchorOrigin: {
+                          vertical: 'bottom',
+                          horizontal: 'left',
+                        },
+                        transformOrigin: {
+                          vertical: 'top',
+                          horizontal: 'left',
+                        },
+                        PaperProps: {
+                          style: {
+                            maxHeight: 200,
+                          },
+                        },
+                      }}
                       sx={{ 
                         width: '80px',
                         '& .MuiOutlinedInput-root': {
