@@ -13,6 +13,11 @@ import {
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
 import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter';
 import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight';
+import TripOriginIcon from '@mui/icons-material/TripOrigin';
+import HexagonOutlinedIcon from '@mui/icons-material/HexagonOutlined';
+import AddCircleOutlinedIcon from '@mui/icons-material/AddCircleOutlined';
+import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
+import HexagonTwoToneIcon from '@mui/icons-material/HexagonTwoTone';
 import { toPng } from 'html-to-image';
 import { calculatePixelDimensions } from '../utils/calculations';
 
@@ -28,6 +33,29 @@ const fonts = ['Arial', 'Roboto', 'Helvetica', 'Times New Roman'];
 const tapeWidthOptions = [6, 9, 12, 18, 24, 36];
 
 const fontSizeOptions = [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 72];
+
+// Add a function to get the correct icon component
+const getIconComponent = (iconType, drive) => {
+  switch (iconType) {
+    case 'Washers':
+      return <TripOriginIcon sx={{ width: '100%', height: '100%' }} />;
+    case 'Nuts':
+      return <HexagonOutlinedIcon sx={{ width: '100%', height: '100%' }} />;
+    case 'Screws':
+      switch (drive) {
+        case 'Phillips':
+          return <AddCircleOutlinedIcon sx={{ width: '100%', height: '100%' }} />;
+        case 'Flat Head':
+          return <RemoveCircleIcon sx={{ width: '100%', height: '100%' }} />;
+        case 'Hex':
+          return <HexagonTwoToneIcon sx={{ width: '100%', height: '100%' }} />;
+        default:
+          return null;
+      }
+    default:
+      return null;
+  }
+};
 
 function LabelMaker() {
   const [config, setConfig] = useState({
@@ -526,11 +554,16 @@ function LabelMaker() {
               sx={{ 
                 width: dimensions.width * 0.8,
                 height: dimensions.width * 0.8,
-                bgcolor: '#ccc',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 mr: 1,
-                flexShrink: 0
+                flexShrink: 0,
+                color: '#282a36', // Set icon color to match text
               }} 
-            />
+            >
+              {getIconComponent(config.icon.type, config.icon.drive)}
+            </Box>
           )}
           <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
             {config.text.lineContents.map((line, index) => (
