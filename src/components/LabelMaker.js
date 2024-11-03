@@ -99,9 +99,9 @@ const generateAutofillText = (icon) => {
     case 'Screws':
       return [`${icon.size}×${icon.length}`, `${icon.head} ${icon.drive}`];
     case 'Nuts':
-      return [`${icon.size} Nut`, ''];
+      return [`${icon.size}`, ''];
     case 'Washers':
-      return [`${icon.size} Washer`, ''];
+      return [`${icon.size}`, ''];
     default:
       return ['', ''];
   }
