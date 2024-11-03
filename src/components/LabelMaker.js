@@ -917,13 +917,21 @@ function LabelMaker() {
             borderRadius: 1,
             display: 'flex',
             alignItems: 'center',
-            p: 1,
+            p: 0,
             mb: 3,
             bgcolor: '#f8f8f2',
             '&.export-mode': {
               border: 'none',
               borderRadius: 0,
               bgcolor: '#FFFFFF',
+              '& *': {  // Target all children elements in export mode
+                color: '#000000 !important',
+                fill: '#000000 !important',
+                stroke: '#000000 !important',
+              },
+              '& img': {  // Target SVG and image elements
+                filter: 'brightness(0)',
+              }
             }
           }}
         >
