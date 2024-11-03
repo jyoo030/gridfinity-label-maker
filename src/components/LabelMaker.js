@@ -284,25 +284,26 @@ function LabelMaker() {
             cacheBust: true,
             pixelRatio: 1,
             quality: 1,
-        });
-        firstScrew = false;
+          });
+          firstScrew = false;
         }
         if (firstNut && config.icon.type === 'Nuts') {
           await toPng(previewRef.current, {
-              width: dimensions.height,
-              height: dimensions.width,
-              style: {
-                transform: 'scale(1)',
-                margin: 0,
-                padding: 0,
-              },
-              cacheBust: true,
-              pixelRatio: 1,
+            width: dimensions.height,
+            height: dimensions.width,
+            style: {
+              transform: 'scale(1)',
+              margin: 0,
+              padding: 0,
+            },
+            cacheBust: true,
+            pixelRatio: 1,
             quality: 1,
           });
           firstNut = false;
         }
-        // Generate PNG
+
+        // Generate PNG with strict black and white
         const dataUrl = await toPng(previewRef.current, {
           width: dimensions.height,
           height: dimensions.width,
@@ -310,10 +311,23 @@ function LabelMaker() {
             transform: 'scale(1)',
             margin: 0,
             padding: 0,
+            backgroundColor: '#FFFFFF',
           },
+          filter: (node) => {
+            // Force black color on all elements during export
+            if (node instanceof HTMLElement) {
+              node.style.color = '#000000';
+              node.style.fill = '#000000';
+              node.style.stroke = '#000000';
+            }
+            return true;
+          },
+          backgroundColor: '#FFFFFF',
           cacheBust: true,
           pixelRatio: 1,
           quality: 1,
+          canvasWindow: window,
+          imageSmoothingEnabled: false,
         });
 
         // Remove export-mode class
@@ -325,7 +339,6 @@ function LabelMaker() {
         link.click();
 
       } catch (error) {
-        // Make sure to remove the class even if there's an error
         previewRef.current.classList.remove('export-mode');
         console.error('Error generating image:', error);
       }
@@ -1112,6 +1125,16 @@ function LabelMaker() {
             '&.export-mode': {
               border: 'none',
               borderRadius: 0,
+              bgcolor: '#FFFFFF',
+              p: 0,
+              m: 0,
+              '& *': {  // Target all children elements in export mode
+                color: '#000000 !important',
+                fill: '#000000 !important',
+                stroke: '#000000 !important',
+                border: 'none !important',
+                borderRadius: '0 !important',
+              },
             },
           }}
         >
