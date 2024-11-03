@@ -116,7 +116,7 @@ function LabelMaker() {
       rawDpi: '180',
       rawTapeLength: '36',
       rawTapeWidth: '12',
-      lockLength: true,
+      customLength: false,
     },
     icon: {
       type: 'Screws',
@@ -332,8 +332,8 @@ function LabelMaker() {
         },
       };
 
-      // If we're unlocking the length, immediately calculate and set the required length
-      if (field === 'lockLength' && value === false) {
+      // If we're disabling custom length, immediately calculate and set the required length
+      if (field === 'customLength' && value === false) {
         const requiredLength = calculateRequiredLength();
         newConfig.printer.tapeLengthMm = requiredLength;
         newConfig.printer.rawTapeLength = requiredLength.toString();
@@ -414,14 +414,14 @@ function LabelMaker() {
 
   // Update useEffect for auto-length calculation
   useEffect(() => {
-    if (!config.printer.lockLength) {
+    if (!config.printer.customLength) {
       const requiredLength = calculateRequiredLength();
       if (Math.abs(requiredLength - config.printer.tapeLengthMm) > 1) {
         handlePrinterChange('tapeLengthMm', 'rawTapeLength', requiredLength.toString());
       }
     }
   }, [
-    config.printer.lockLength,
+    config.printer.customLength,
     config.printer.tapeLengthMm,
     textLines,
     textFontSizes,
@@ -602,15 +602,15 @@ function LabelMaker() {
                   input: { 
                     min: 8,
                     max: 100,
-                    disabled: !config.printer.lockLength 
+                    disabled: !config.printer.customLength
                   }
                 }}
               />
               <FormControlLabel
                 control={
                   <Checkbox
-                    checked={Boolean(config.printer.lockLength)}
-                    onChange={(e) => handlePrinterChange('lockLength', 'lockLength', e.target.checked)}
+                    checked={Boolean(config.printer.customLength)}
+                    onChange={(e) => handlePrinterChange('customLength', 'customLength', e.target.checked)}
                   />
                 }
                 label="Custom Length"
@@ -1066,7 +1066,7 @@ function LabelMaker() {
             borderRadius: 1,
             display: 'flex',
             alignItems: 'center',
-            p: 1,
+            p: 0,
             mb: 3,
             bgcolor: '#f8f8f2',
           }}
