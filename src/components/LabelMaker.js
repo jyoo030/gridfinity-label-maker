@@ -238,9 +238,14 @@ function LabelMaker() {
     });
   };
 
+  let firstScrew = true;
+  let firstNut = true;
   const exportImage = async () => {
     if (previewRef.current) {
       try {
+        // Add export-mode class before generating image
+        previewRef.current.classList.add('export-mode');
+
         // Wait for icons to be loaded
         const loadIcon = async (src) => {
           if (!src) return null;
@@ -267,6 +272,36 @@ function LabelMaker() {
 
         await Promise.all(iconPromises);
 
+        if (firstScrew && config.icon.type === 'Screws') {
+          await toPng(previewRef.current, {
+            width: dimensions.height,
+            height: dimensions.width,
+            style: {
+              transform: 'scale(1)',
+              margin: 0,
+              padding: 0,
+            },
+            cacheBust: true,
+            pixelRatio: 1,
+            quality: 1,
+        });
+        firstScrew = false;
+        }
+        if (firstNut && config.icon.type === 'Nuts') {
+          await toPng(previewRef.current, {
+              width: dimensions.height,
+              height: dimensions.width,
+              style: {
+                transform: 'scale(1)',
+                margin: 0,
+                padding: 0,
+              },
+              cacheBust: true,
+              pixelRatio: 1,
+            quality: 1,
+          });
+          firstNut = false;
+        }
         // Generate PNG
         const dataUrl = await toPng(previewRef.current, {
           width: dimensions.height,
@@ -281,12 +316,17 @@ function LabelMaker() {
           quality: 1,
         });
 
+        // Remove export-mode class
+        previewRef.current.classList.remove('export-mode');
+
         const link = document.createElement('a');
         link.download = 'label.png';
         link.href = dataUrl;
         link.click();
 
       } catch (error) {
+        // Make sure to remove the class even if there's an error
+        previewRef.current.classList.remove('export-mode');
         console.error('Error generating image:', error);
       }
     }
@@ -1069,6 +1109,10 @@ function LabelMaker() {
             p: 0,
             mb: 3,
             bgcolor: '#f8f8f2',
+            '&.export-mode': {
+              border: 'none',
+              borderRadius: 0,
+            },
           }}
         >
           {config.icon.type !== 'None' && (
