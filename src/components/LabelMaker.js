@@ -211,26 +211,23 @@ function LabelMaker() {
       // If enabling fitToLabel, calculate and set font sizes
       if (category === 'text' && field === 'fitToLabel') {
         if (value) {
-          const availableHeight = (dimensions.width / newConfig.text.lines) * 0.8; // 80% of height per line
-          const availableWidth = dimensions.height * 0.8; // 80% of label width
+          const availableHeight = dimensions.width; // Full height available
+          const availableWidth = dimensions.height; // Full width available
           
-          // Update each line's font size
-          newConfig.text.lineContents = newConfig.text.lineContents.map(line => {
-            const maxSize = calculateMaxFontSize(
-              line.text,
-              availableWidth,
-              availableHeight,
-              newConfig.text.font,
-              line.bold,
-              line.italic
-            );
-            
-            return {
-              ...line,
-              fontSize: maxSize,
-              rawFontSize: maxSize.toString(),
-            };
-          });
+          // Calculate max font size considering all lines together
+          const maxSize = calculateMaxFontSize(
+            newConfig.text.lineContents,
+            availableWidth,
+            availableHeight,
+            newConfig.text.font
+          );
+          
+          // Update all lines to use the same font size
+          newConfig.text.lineContents = newConfig.text.lineContents.map(line => ({
+            ...line,
+            fontSize: maxSize,
+            rawFontSize: maxSize.toString(),
+          }));
         }
       }
 
@@ -428,29 +425,27 @@ function LabelMaker() {
   // Update useEffect for font size recalculation
   useEffect(() => {
     if (config.text.fitToLabel) {
-      const availableHeight = (dimensions.width / config.text.lines);
-      const availableWidth = dimensions.height;
+      const availableHeight = dimensions.width; // Full height available
+      const availableWidth = dimensions.height; // Full width available
       
+      // Calculate max font size considering all lines together
+      const maxSize = calculateMaxFontSize(
+        config.text.lineContents,
+        availableWidth,
+        availableHeight,
+        config.text.font
+      );
+      
+      // Update all lines to use the same font size
       setConfig(prev => ({
         ...prev,
         text: {
           ...prev.text,
-          lineContents: prev.text.lineContents.map(line => {
-            const maxSize = calculateMaxFontSize(
-              line.text,
-              availableWidth,
-              availableHeight,
-              prev.text.font,
-              line.bold,
-              line.italic
-            );
-            
-            return {
-              ...line,
-              fontSize: maxSize,
-              rawFontSize: maxSize.toString(),
-            };
-          }),
+          lineContents: prev.text.lineContents.map(line => ({
+            ...line,
+            fontSize: maxSize,
+            rawFontSize: maxSize.toString(),
+          })),
         },
       }));
     }
@@ -487,28 +482,48 @@ function LabelMaker() {
     handlePrinterChange
   ]);
 
-  // Add calculateMaxFontSize inside the component
-  const calculateMaxFontSize = (text, width, height, font, bold, italic) => {
-    if (!text) return 12; // Default size for empty text
+  // Update the calculateMaxFontSize function
+  const calculateMaxFontSize = (lines, width, height, font) => {
+    if (lines.length === 0) return 12; // Default size for no text
     
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
     let fontSize = 8;
-    const maxFontSize = 120; // Add a reasonable upper limit
+    const maxFontSize = 120;
+    const testString = 'AjgqI'; // String containing tall characters to measure max height
     
     while (fontSize < maxFontSize) {
-      // Set font properties
-      const fontStyle = `${italic ? 'italic ' : ''}${bold ? 'bold ' : ''}${fontSize}px "${font}"`;
-      ctx.font = fontStyle;
+      let maxLineWidth = 0;
+      let totalHeight = 0;
       
-      // Measure text
-      const metrics = ctx.measureText(text);
-      const textHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
-      const textWidth = metrics.width;
+      // First get the max height for this font size using test string
+      const fontStyle = `${fontSize}px "${font}"`;
+      ctx.font = fontStyle;
+      const heightMetrics = ctx.measureText(testString);
+      const lineHeight = heightMetrics.actualBoundingBoxAscent + heightMetrics.actualBoundingBoxDescent;
+      
+      // Check each line
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const text = line.text;
+        
+        if (!text) continue;
+        
+        // Set font properties for width measurement
+        const lineFontStyle = `${line.italic ? 'italic ' : ''}${line.bold ? 'bold ' : ''}${fontSize}px "${font}"`;
+        ctx.font = lineFontStyle;
+        
+        // Measure text width
+        const metrics = ctx.measureText(text);
+        const textWidth = metrics.width;
+        
+        maxLineWidth = Math.max(maxLineWidth, textWidth);
+        totalHeight += lineHeight;
+      }
       
       // Check if we've exceeded either dimension
-      if (textHeight >= height || textWidth >= width) {
+      if (maxLineWidth >= width || totalHeight >= height) {
         return Math.max(6, fontSize - 2); // Return previous size, but not smaller than 6px
       }
       
@@ -1175,10 +1190,11 @@ function LabelMaker() {
                     line.underline && 'underline',
                     line.strikethrough && 'line-through'
                   ].filter(Boolean).join(' '),
-                  marginBottom: index < config.text.lines - 1 ? '2px' : 0,
+                  marginBottom: 0,
                   textAlign: line.textAlign,
                   width: '100%',
                   color: '#282a36',
+                  lineHeight: 1,
                 }}
               >
                 {line.text || `Line ${index + 1}`}
