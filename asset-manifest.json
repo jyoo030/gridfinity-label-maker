@@ -1,0 +1,26 @@
+{
+  "files": {
+    "main.css": "/gridfinity-label-maker/static/css/main.e6c13ad2.css",
+    "main.js": "/gridfinity-label-maker/static/js/main.b5eb7054.js",
+    "static/js/453.6aa412dc.chunk.js": "/gridfinity-label-maker/static/js/453.6aa412dc.chunk.js",
+    "static/media/nut.svg": "/gridfinity-label-maker/static/media/nut.5e34732d945abab1df0e6c70f5b2157c.svg",
+    "static/media/pan.svg": "/gridfinity-label-maker/static/media/pan.cf8e7024ba3b116b604283264ef97701.svg",
+    "static/media/round.svg": "/gridfinity-label-maker/static/media/round.8d800a777c893250c8791fee0bb9b7eb.svg",
+    "static/media/button.svg": "/gridfinity-label-maker/static/media/button.e5b63675dd828db3db7aa2100bd42e85.svg",
+    "static/media/flat.svg": "/gridfinity-label-maker/static/media/flat.7ce0dab99d1f658438cd263f95034ea6.svg",
+    "index.html": "/gridfinity-label-maker/index.html",
+    "static/media/hex.svg": "/gridfinity-label-maker/static/media/hex.391e562b1b1e634a4e32d020abb5f767.svg",
+    "static/media/torx_driver.svg": "/gridfinity-label-maker/static/media/torx_driver.19f5e9217bd2d0eb2f5ac536e0100c48.svg",
+    "static/media/phillips_driver.svg": "/gridfinity-label-maker/static/media/phillips_driver.7775d0296e03cb3e35df3b6372382c6f.svg",
+    "static/media/hex_driver.svg": "/gridfinity-label-maker/static/media/hex_driver.cf9402db6fcc6fc742a1d0d3f0f31708.svg",
+    "static/media/square_driver.svg": "/gridfinity-label-maker/static/media/square_driver.6224ed12be3282c8d955a8a3db5ebd9c.svg",
+    "static/media/slotted_driver.svg": "/gridfinity-label-maker/static/media/slotted_driver.3342330a36c559ce1a9bfd0d763198a7.svg",
+    "main.e6c13ad2.css.map": "/gridfinity-label-maker/static/css/main.e6c13ad2.css.map",
+    "main.b5eb7054.js.map": "/gridfinity-label-maker/static/js/main.b5eb7054.js.map",
+    "453.6aa412dc.chunk.js.map": "/gridfinity-label-maker/static/js/453.6aa412dc.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e6c13ad2.css",
+    "static/js/main.b5eb7054.js"
+  ]
+}
