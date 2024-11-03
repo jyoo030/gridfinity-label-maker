@@ -258,31 +258,86 @@ function LabelMaker() {
 
   const exportImage = async () => {
     if (previewRef.current) {
-      // Wait for custom icon to load if present
-      if (config.icon.customIcon) {
-        const img = new Image();
-        img.src = config.icon.customIcon;
-        await new Promise((resolve) => {
-          img.onload = resolve;
+      try {
+        // Add export-mode class before generating image
+        previewRef.current.classList.add('export-mode');
+
+        // Create an array of promises for all possible icons that need to be loaded
+        const iconPromises = [];
+
+        // Helper function to create image load promise
+        const createImageLoadPromise = (src) => {
+          return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";  // Add this to handle CORS
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = src;
+          });
+        };
+
+        // Add custom icon if present
+        if (config.icon.customIcon) {
+          iconPromises.push(createImageLoadPromise(config.icon.customIcon));
+        }
+
+        // Add nut icon if needed
+        if (config.icon.type === 'Nuts' && config.icon.showIcon) {
+          iconPromises.push(createImageLoadPromise(NutIcon));
+        }
+
+        // Add screw icons if needed
+        if (config.icon.type === 'Screws') {
+          if (config.icon.showHeadIcon) {
+            const headIcon = headIcons[config.icon.head];
+            iconPromises.push(createImageLoadPromise(headIcon));
+          }
+          if (config.icon.showDriveIcon) {
+            const driveIcon = driveIcons[config.icon.drive];
+            iconPromises.push(createImageLoadPromise(driveIcon));
+          }
+        }
+
+        // Wait for all icons to load
+        await Promise.all(iconPromises);
+
+        // Add a small delay to ensure DOM updates are complete
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Generate the PNG
+        const dataUrl = await toPng(previewRef.current, {
+          width: dimensions.height,
+          height: dimensions.width,
+          style: {
+            transform: 'scale(1)',
+            margin: 0,
+            padding: 0,
+            backgroundColor: '#FFFFFF',
+          },
+          backgroundColor: '#FFFFFF',
+          cacheBust: true,
+          pixelRatio: 1,
+          quality: 1,
+          includeQueryParams: true,
+          skipAutoScale: true,
+          canvasWidth: dimensions.height,
+          canvasHeight: dimensions.width,
         });
+
+        // Remove export-mode class after generating image
+        previewRef.current.classList.remove('export-mode');
+
+        const link = document.createElement('a');
+        link.download = 'label.png';
+        link.href = dataUrl;
+        link.click();
+
+      } catch (error) {
+        // Remove export-mode class in case of error
+        previewRef.current.classList.remove('export-mode');
+        console.error('Error generating image:', error);
+        // You might want to show an error message to the user here
       }
-
-      const dataUrl = await toPng(previewRef.current, {
-        width: dimensions.height,
-        height: dimensions.width,
-        style: {
-          transform: 'scale(1)',
-          margin: 0,
-          padding: 0,
-        },
-        cacheBust: true, // Prevent caching issues with images
-        pixelRatio: 1, // Ensure exact pixel dimensions
-      });
-
-      const link = document.createElement('a');
-      link.download = 'label.png';
-      link.href = dataUrl;
-      link.click();
     }
   };
 
@@ -406,7 +461,7 @@ function LabelMaker() {
               label="Tape Length (mm)"
               value={config.printer.rawTapeLength}
               onChange={(e) => handlePrinterChange('tapeLengthMm', 'rawTapeLength', e.target.value)}
-              inputProps={{ min: 8, max: 16 }}
+              inputProps={{ min: 8, max: 100 }}
             />
             <Typography variant="body2" color="textSecondary">
               Output dimensions: {dimensions.width}px × {dimensions.height}px
@@ -865,6 +920,11 @@ function LabelMaker() {
             p: 1,
             mb: 3,
             bgcolor: '#f8f8f2',
+            '&.export-mode': {
+              border: 'none',
+              borderRadius: 0,
+              bgcolor: '#FFFFFF',
+            }
           }}
         >
           {config.icon.type !== 'None' && (
