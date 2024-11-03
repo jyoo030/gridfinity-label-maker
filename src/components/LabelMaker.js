@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Stack,
   Box,
@@ -74,7 +74,7 @@ const fonts = [
 
 const tapeWidthOptions = [6, 9, 12, 18, 24, 36];
 
-const fontSizeOptions = [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 72];
+const fontSizeOptions = Array.from({ length: 113 }, (_, i) => i + 8);
 
 // Create mappings for the SVG files
 const driveIcons = {
@@ -180,10 +180,10 @@ const generateAutofillText = (icon) => {
 function LabelMaker() {
   const [config, setConfig] = useState({
     printer: {
-      dpi: 200,
+      dpi: 180,
       tapeLengthMm: 36,
       tapeWidthMm: 12,
-      rawDpi: '200',
+      rawDpi: '180',
       rawTapeLength: '36',
       rawTapeWidth: '12',
     },
@@ -219,6 +219,45 @@ function LabelMaker() {
 
   const previewRef = useRef(null);
 
+  // Calculate dimensions based on printer settings
+  const dimensions = calculatePixelDimensions(
+    config.printer.tapeWidthMm,
+    config.printer.tapeLengthMm,
+    config.printer.dpi
+  );
+
+  // Add calculateMaxFontSize inside the component
+  const calculateMaxFontSize = (text, width, height, font, bold, italic) => {
+    if (!text) return 12; // Default size for empty text
+    
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    let fontSize = 8;
+    const maxFontSize = 120; // Add a reasonable upper limit
+    
+    while (fontSize < maxFontSize) {
+      // Set font properties
+      const fontStyle = `${italic ? 'italic ' : ''}${bold ? 'bold ' : ''}${fontSize}px "${font}"`;
+      ctx.font = fontStyle;
+      
+      // Measure text
+      const metrics = ctx.measureText(text);
+      const textHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+      const textWidth = metrics.width;
+      
+      // Check if we've exceeded either dimension
+      if (textHeight >= height || textWidth >= width) {
+        return Math.max(6, fontSize - 2); // Return previous size, but not smaller than 6px
+      }
+      
+      fontSize += 1;
+    }
+    
+    return Math.min(fontSize, maxFontSize);
+  };
+
+  // Update handleConfigChange for fitToLabel
   const handleConfigChange = (category, field, value) => {
     setConfig(prev => {
       const newConfig = {
@@ -229,27 +268,30 @@ function LabelMaker() {
         },
       };
 
-      // If changing icon properties and autofill is enabled, update the text
-      if (category === 'icon' && prev.icon.autofill && prev.icon.type === 'Screws') {
-        const [line1, line2] = generateAutofillText(newConfig.icon);
-        return {
-          ...newConfig,
-          text: {
-            ...newConfig.text,
-            lines: 2,
-            rawLinesInput: '2',
-            lineContents: [
-              {
-                ...newConfig.text.lineContents[0],
-                text: line1,
-              },
-              {
-                ...newConfig.text.lineContents[1],
-                text: line2,
-              },
-            ],
-          },
-        };
+      // If enabling fitToLabel, calculate and set font sizes
+      if (category === 'text' && field === 'fitToLabel') {
+        if (value) {
+          const availableHeight = (dimensions.width / newConfig.text.lines) * 0.8; // 80% of height per line
+          const availableWidth = dimensions.height * 0.8; // 80% of label width
+          
+          // Update each line's font size
+          newConfig.text.lineContents = newConfig.text.lineContents.map(line => {
+            const maxSize = calculateMaxFontSize(
+              line.text,
+              availableWidth,
+              availableHeight,
+              newConfig.text.font,
+              line.bold,
+              line.italic
+            );
+            
+            return {
+              ...line,
+              fontSize: maxSize,
+              rawFontSize: maxSize.toString(),
+            };
+          });
+        }
       }
 
       return newConfig;
@@ -398,13 +440,6 @@ function LabelMaker() {
     }));
   };
 
-  // Calculate dimensions based on printer settings
-  const dimensions = calculatePixelDimensions(
-    config.printer.tapeWidthMm,
-    config.printer.tapeLengthMm,
-    config.printer.dpi
-  );
-
   const handleCustomIconUpload = (event) => {
     const file = event.target.files[0];
     if (file && (file.type === 'image/svg+xml' || file.type.startsWith('image/'))) {
@@ -415,6 +450,51 @@ function LabelMaker() {
       reader.readAsDataURL(file);
     }
   };
+
+  // Add these before the useEffect
+  const textContent = config.text.lineContents.map(line => line.text).join('');
+  const boldSettings = config.text.lineContents.map(line => line.bold).join('');
+  const italicSettings = config.text.lineContents.map(line => line.italic).join('');
+
+  // Update useEffect to handle font size recalculation
+  useEffect(() => {
+    if (config.text.fitToLabel) {
+      const availableHeight = (dimensions.width / config.text.lines);
+      const availableWidth = dimensions.height;
+      
+      setConfig(prev => ({
+        ...prev,
+        text: {
+          ...prev.text,
+          lineContents: prev.text.lineContents.map(line => {
+            const maxSize = calculateMaxFontSize(
+              line.text,
+              availableWidth,
+              availableHeight,
+              prev.text.font,
+              line.bold,
+              line.italic
+            );
+            
+            return {
+              ...line,
+              fontSize: maxSize,
+              rawFontSize: maxSize.toString(),
+            };
+          }),
+        },
+      }));
+    }
+  }, [
+    config.text.fitToLabel,
+    textContent,
+    config.text.lines,
+    config.text.font,
+    dimensions.width,
+    dimensions.height,
+    boldSettings,
+    italicSettings
+  ]);
 
   return (
     <Stack spacing={3}>
@@ -747,7 +827,7 @@ function LabelMaker() {
                   }}
                 >
 
-                  <FormControl variant="outlined">
+                  <FormControl variant="outlined" disabled={config.text.fitToLabel}>
                     <InputLabel id={`font-size-label-${index}`}>Size</InputLabel>
                     <Select
                       labelId={`font-size-label-${index}`}
@@ -759,32 +839,17 @@ function LabelMaker() {
                         Number(e.target.value),
                         'rawFontSize'
                       )}
-                      MenuProps={{
-                        anchorOrigin: {
-                          vertical: 'bottom',
-                          horizontal: 'left',
-                        },
-                        transformOrigin: {
-                          vertical: 'top',
-                          horizontal: 'left',
-                        },
-                        PaperProps: {
-                          style: {
-                            maxHeight: 200,
-                          },
-                        },
-                      }}
                       sx={{ 
                         width: '80px',
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: 0,
-                        },
-                        '& fieldset': {
-                          border: 'none',
-                        },
-                        '& .MuiSelect-select': {
-                          py: 2,
-                        },
+                        '& .MuiInputBase-input': {
+                          textAlign: 'right',
+                          paddingRight: '24px'
+                        }
+                      }}
+                      MenuProps={{
+                        PaperProps: {
+                          style: { maxHeight: 200 }
+                        }
                       }}
                     >
                       {fontSizeOptions.map((size) => (
@@ -897,6 +962,16 @@ function LabelMaker() {
                 </Box>
               </Box>
             ))}
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={config.text.fitToLabel || false}
+                  onChange={(e) => handleConfigChange('text', 'fitToLabel', e.target.checked)}
+                />
+              }
+              label="Fit to Label"
+            />
           </Stack>
         </Box>
       </Box>
