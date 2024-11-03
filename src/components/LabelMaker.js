@@ -97,7 +97,7 @@ const headIcons = {
 const generateAutofillText = (icon) => {
   switch (icon.type) {
     case 'Screws':
-      return [`${icon.size} × ${icon.length}mm`, `${icon.head} Head ${icon.drive}`];
+      return [`${icon.size}×${icon.length}`, `${icon.head} ${icon.drive}`];
     case 'Nuts':
       return [`${icon.size} Nut`, ''];
     case 'Washers':
@@ -506,9 +506,7 @@ function LabelMaker() {
       // Check each line
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        const text = line.text;
-        
-        if (!text) continue;
+        const text = line.text || `Line ${i + 1}`; // Use placeholder text if no actual text
         
         // Set font properties for width measurement
         const lineFontStyle = `${line.italic ? 'italic ' : ''}${line.bold ? 'bold ' : ''}${fontSize}px "${font}"`;
