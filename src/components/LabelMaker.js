@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Stack,
   Box,
@@ -244,36 +244,45 @@ function LabelMaker() {
     config.printer.dpi
   );
 
-  // Add calculateMaxFontSize inside the component
-  const calculateMaxFontSize = (text, width, height, font, bold, italic) => {
-    if (!text) return 12; // Default size for empty text
-    
+  // Wrap calculateRequiredLength in useCallback
+  const calculateRequiredLength = useCallback(() => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
-    let fontSize = 8;
-    const maxFontSize = 120; // Add a reasonable upper limit
-    
-    while (fontSize < maxFontSize) {
-      // Set font properties
-      const fontStyle = `${italic ? 'italic ' : ''}${bold ? 'bold ' : ''}${fontSize}px "${font}"`;
-      ctx.font = fontStyle;
-      
-      // Measure text
-      const metrics = ctx.measureText(text);
-      const textHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
-      const textWidth = metrics.width;
-      
-      // Check if we've exceeded either dimension
-      if (textHeight >= height || textWidth >= width) {
-        return Math.max(6, fontSize - 2); // Return previous size, but not smaller than 6px
-      }
-      
-      fontSize += 1;
+    let totalWidth = 0;
+
+    // Calculate icon width if present
+    if (config.icon.type !== 'None' && 
+        ((config.icon.type === 'Screws' && (config.icon.showHeadIcon || config.icon.showDriveIcon)) || 
+         (config.icon.type !== 'Screws' && config.icon.showIcon))) {
+      totalWidth += config.printer.tapeWidthMm;
     }
+
+    // Calculate width needed for text
+    let maxTextWidth = 0;
+    config.text.lineContents.forEach(line => {
+      const text = line.text || `Line ${config.text.lineContents.indexOf(line) + 1}`;
+      ctx.font = `${line.italic ? 'italic ' : ''}${line.bold ? 'bold ' : ''}${line.fontSize}px "${config.text.font}"`;
+      const metrics = ctx.measureText(text);
+      maxTextWidth = Math.max(maxTextWidth, metrics.width);
+    });
+
+    // Convert text pixels to mm
+    const pixelsPerMm = config.printer.dpi / 25.4;
+    const textWidthMm = Math.ceil(maxTextWidth / pixelsPerMm);
     
-    return Math.min(fontSize, maxFontSize);
-  };
+    totalWidth += textWidthMm;
+    totalWidth += 2;
+
+    return Math.max(totalWidth, 8);
+  }, [config.icon.type, config.icon.showHeadIcon, config.icon.showDriveIcon, 
+      config.icon.showIcon, config.printer.tapeWidthMm, config.printer.dpi, 
+      config.text.lineContents, config.text.font]);
+
+  // Extract complex expressions for useEffect dependencies
+  const textLines = config.text.lineContents.map(line => line.text).join('');
+  const textFontSizes = config.text.lineContents.map(line => line.fontSize).join('');
+  const textBoldSettings = config.text.lineContents.map(line => line.bold).join('');
+  const textItalicSettings = config.text.lineContents.map(line => line.italic).join('');
 
   // Update handleConfigChange for fitToLabel
   const handleConfigChange = (category, field, value) => {
@@ -440,7 +449,8 @@ function LabelMaker() {
     }));
   };
 
-  const handlePrinterChange = (field, rawField, value) => {
+  // Wrap handlePrinterChange in useCallback
+  const handlePrinterChange = useCallback((field, rawField, value) => {
     setConfig(prev => {
       const newConfig = {
         ...prev,
@@ -460,7 +470,7 @@ function LabelMaker() {
 
       return newConfig;
     });
-  };
+  }, [calculateRequiredLength]);
 
   const handleLineStyleChange = (lineIndex, field, value, rawField) => {
     setConfig(prev => ({
@@ -491,12 +501,7 @@ function LabelMaker() {
     }
   };
 
-  // Add these before the useEffect
-  const textContent = config.text.lineContents.map(line => line.text).join('');
-  const boldSettings = config.text.lineContents.map(line => line.bold).join('');
-  const italicSettings = config.text.lineContents.map(line => line.italic).join('');
-
-  // Update useEffect to handle font size recalculation
+  // Update useEffect for font size recalculation
   useEffect(() => {
     if (config.text.fitToLabel) {
       const availableHeight = (dimensions.width / config.text.lines);
@@ -527,68 +532,67 @@ function LabelMaker() {
     }
   }, [
     config.text.fitToLabel,
-    textContent,
+    textLines,
     config.text.lines,
     config.text.font,
     dimensions.width,
     dimensions.height,
-    boldSettings,
-    italicSettings
+    textBoldSettings,
+    textItalicSettings
   ]);
 
-  // Update the calculateRequiredLength function with more precise calculations
-  const calculateRequiredLength = () => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    let totalWidth = 0;
-
-    // Calculate icon width if present
-    if (config.icon.type !== 'None' && 
-        ((config.icon.type === 'Screws' && (config.icon.showHeadIcon || config.icon.showDriveIcon)) || 
-         (config.icon.type !== 'Screws' && config.icon.showIcon))) {
-      // Icon takes up width equal to the tape width (square aspect ratio)
-      totalWidth += config.printer.tapeWidthMm;
-    }
-
-    // Calculate width needed for text
-    let maxTextWidth = 0;
-    config.text.lineContents.forEach(line => {
-      const text = line.text || `Line ${config.text.lineContents.indexOf(line) + 1}`;
-      ctx.font = `${line.italic ? 'italic ' : ''}${line.bold ? 'bold ' : ''}${line.fontSize}px "${config.text.font}"`;
-      const metrics = ctx.measureText(text);
-      maxTextWidth = Math.max(maxTextWidth, metrics.width);
-    });
-
-    // Convert text pixels to mm
-    const pixelsPerMm = config.printer.dpi / 25.4;
-    const textWidthMm = Math.ceil(maxTextWidth / pixelsPerMm);
-    
-    totalWidth += textWidthMm;
-
-    return Math.max(totalWidth, 8); // Minimum 8mm length
-  };
-
-  // Update useEffect to handle both growth and shrinking
+  // Update useEffect for auto-length calculation
   useEffect(() => {
     if (!config.printer.lockLength) {
       const requiredLength = calculateRequiredLength();
-      // Only update if the difference is more than 1mm to prevent minor fluctuations
       if (Math.abs(requiredLength - config.printer.tapeLengthMm) > 1) {
         handlePrinterChange('tapeLengthMm', 'rawTapeLength', requiredLength.toString());
       }
     }
   }, [
-    config.text.lineContents.map(line => line.text).join(''), // Track actual text content
-    config.text.lineContents.map(line => line.fontSize).join(''), // Track font sizes
-    config.text.font,
     config.printer.lockLength,
-    config.printer.dpi,
+    config.printer.tapeLengthMm,
+    textLines,
+    textFontSizes,
+    config.text.font,
     config.icon.type,
     config.icon.showHeadIcon,
     config.icon.showDriveIcon,
     config.icon.showIcon,
-    config.printer.tapeWidthMm
+    calculateRequiredLength,
+    handlePrinterChange
   ]);
+
+  // Add calculateMaxFontSize inside the component
+  const calculateMaxFontSize = (text, width, height, font, bold, italic) => {
+    if (!text) return 12; // Default size for empty text
+    
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    let fontSize = 8;
+    const maxFontSize = 120; // Add a reasonable upper limit
+    
+    while (fontSize < maxFontSize) {
+      // Set font properties
+      const fontStyle = `${italic ? 'italic ' : ''}${bold ? 'bold ' : ''}${fontSize}px "${font}"`;
+      ctx.font = fontStyle;
+      
+      // Measure text
+      const metrics = ctx.measureText(text);
+      const textHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+      const textWidth = metrics.width;
+      
+      // Check if we've exceeded either dimension
+      if (textHeight >= height || textWidth >= width) {
+        return Math.max(6, fontSize - 2); // Return previous size, but not smaller than 6px
+      }
+      
+      fontSize += 1;
+    }
+    
+    return Math.min(fontSize, maxFontSize);
+  };
 
   return (
     <Stack spacing={3}>
@@ -636,21 +640,23 @@ function LabelMaker() {
                 label="Tape Length (mm)"
                 value={config.printer.rawTapeLength}
                 onChange={(e) => handlePrinterChange('tapeLengthMm', 'rawTapeLength', e.target.value)}
-                inputProps={{ 
-                  min: 8,
-                  max: 100,
-                  disabled: !config.printer.lockLength 
+                slotProps={{ 
+                  input: { 
+                    min: 8,
+                    max: 100,
+                    disabled: !config.printer.lockLength 
+                  }
                 }}
               />
               <FormControlLabel
                 control={
                   <Checkbox
-                    checked={config.printer.lockLength}
+                    checked={Boolean(config.printer.lockLength)}
                     onChange={(e) => handlePrinterChange('lockLength', 'lockLength', e.target.checked)}
                   />
                 }
                 label="Custom Length"
-                sx={{ mt: -1 }} // Align with TextField
+                sx={{ mt: -1 }}
               />
             </Box>
             <Typography variant="body2" color="textSecondary">
