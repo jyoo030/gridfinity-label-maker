@@ -131,16 +131,30 @@ const getIconComponent = (iconType, drive, head, customIcon, showHeadIcon, showD
       const headIcon = headIcons[head];
       
       return (
-        <Stack direction="row" spacing={1} sx={{ width: '100%', height: '100%' }}>
+        <Box 
+          sx={{ 
+            width: '100%', 
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            p: 0,
+            m: 0,
+          }}
+        >
           {headIcon && showHeadIcon && (
             <Box
               component="img"
               src={headIcon}
               alt={`${head} head icon`}
               sx={{
-                width: showDriveIcon ? '50%' : '100%',
-                height: '100%',
+                width: '100%',
+                height: showDriveIcon ? '50%' : '100%',
                 objectFit: 'contain',
+                display: 'block',
+                p: 0,
+                m: 0,
               }}
             />
           )}
@@ -150,13 +164,16 @@ const getIconComponent = (iconType, drive, head, customIcon, showHeadIcon, showD
               src={driveIcon}
               alt={`${drive} drive icon`}
               sx={{
-                width: showHeadIcon ? '50%' : '100%',
-                height: '100%',
+                width: '100%',
+                height: showHeadIcon ? '50%' : '100%',
                 objectFit: 'contain',
+                display: 'block',
+                p: 0,
+                m: 0,
               }}
             />
           )}
-        </Stack>
+        </Box>
       );
     default:
       return null;
@@ -1099,8 +1116,8 @@ function LabelMaker() {
             ) && (
               <Box 
                 sx={{ 
-                  width: dimensions.width * 0.8,
-                  height: dimensions.width * 0.8,
+                  width: dimensions.width,
+                  height: dimensions.width,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
