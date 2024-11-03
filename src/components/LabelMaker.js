@@ -93,93 +93,6 @@ const headIcons = {
   Round: RoundHead,
 };
 
-// Update the getIconComponent function
-const getIconComponent = (iconType, drive, head, customIcon, showHeadIcon, showDriveIcon, showIcon) => {
-  if (customIcon) {
-    return showIcon ? (
-      <Box
-        component="img"
-        src={customIcon}
-        alt="Custom icon"
-        sx={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'contain',
-        }}
-      />
-    ) : null;
-  }
-
-  switch (iconType) {
-    case 'Washers':
-      return showIcon ? <TripOriginIcon sx={{ width: '100%', height: '100%' }} /> : null;
-    case 'Nuts':
-      return showIcon ? (
-        <Box
-          component="img"
-          src={NutIcon}
-          alt="Nut icon"
-          sx={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-          }}
-        />
-      ) : null;
-    case 'Screws':
-      const driveIcon = driveIcons[drive];
-      const headIcon = headIcons[head];
-      
-      return (
-        <Box 
-          sx={{ 
-            width: '100%', 
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            p: 0,
-            m: 0,
-          }}
-        >
-          {headIcon && showHeadIcon && (
-            <Box
-              component="img"
-              src={headIcon}
-              alt={`${head} head icon`}
-              sx={{
-                width: '100%',
-                height: showDriveIcon ? '50%' : '100%',
-                objectFit: 'contain',
-                display: 'block',
-                p: 0,
-                m: 0,
-              }}
-            />
-          )}
-          {driveIcon && showDriveIcon && (
-            <Box
-              component="img"
-              src={driveIcon}
-              alt={`${drive} drive icon`}
-              sx={{
-                width: '100%',
-                height: showHeadIcon ? '50%' : '100%',
-                objectFit: 'contain',
-                display: 'block',
-                p: 0,
-                m: 0,
-              }}
-            />
-          )}
-        </Box>
-      );
-    default:
-      return null;
-  }
-};
-
 // Add this helper function to generate the autofill text
 const generateAutofillText = (icon) => {
   switch (icon.type) {
@@ -328,65 +241,33 @@ function LabelMaker() {
   const exportImage = async () => {
     if (previewRef.current) {
       try {
-        // Pre-load all SVG icons
-        const preloadAllIcons = async () => {
-          const allIconPromises = [];
-          
-          // Load all drive icons
-          Object.values(driveIcons).forEach(iconSrc => {
-            allIconPromises.push(new Promise((resolve, reject) => {
-              const img = new Image();
-              img.crossOrigin = "anonymous";
-              img.onload = () => resolve(img);
-              img.onerror = reject;
-              img.src = iconSrc;
-            }));
-          });
-
-          // Load all head icons
-          Object.values(headIcons).forEach(iconSrc => {
-            allIconPromises.push(new Promise((resolve, reject) => {
-              const img = new Image();
-              img.crossOrigin = "anonymous";
-              img.onload = () => resolve(img);
-              img.onerror = reject;
-              img.src = iconSrc;
-            }));
-          });
-
-          // Load nut icon
-          allIconPromises.push(new Promise((resolve, reject) => {
+        // Wait for icons to be loaded
+        const loadIcon = async (src) => {
+          if (!src) return null;
+          return new Promise((resolve, reject) => {
             const img = new Image();
-            img.crossOrigin = "anonymous";
-            img.onload = () => resolve(img);
+            img.onload = () => resolve();
             img.onerror = reject;
-            img.src = NutIcon;
-          }));
-
-          // Load custom icon if present
-          if (config.icon.customIcon) {
-            allIconPromises.push(new Promise((resolve, reject) => {
-              const img = new Image();
-              img.crossOrigin = "anonymous";
-              img.onload = () => resolve(img);
-              img.onerror = reject;
-              img.src = config.icon.customIcon;
-            }));
-          }
-
-          await Promise.all(allIconPromises);
+            img.src = src;
+          });
         };
 
-        // Pre-load all icons first
-        await preloadAllIcons();
+        // Load all necessary icons
+        const iconPromises = [];
+        if (config.icon.type === 'Screws') {
+          if (config.icon.showHeadIcon) {
+            iconPromises.push(loadIcon(headIcons[config.icon.head]));
+          }
+          if (config.icon.showDriveIcon) {
+            iconPromises.push(loadIcon(driveIcons[config.icon.drive]));
+          }
+        } else if (config.icon.type === 'Nuts') {
+          iconPromises.push(loadIcon(NutIcon));
+        }
 
-        // Add export-mode class
-        previewRef.current.classList.add('export-mode');
+        await Promise.all(iconPromises);
 
-        // Add a delay to ensure DOM updates
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        // Generate the PNG
+        // Generate PNG
         const dataUrl = await toPng(previewRef.current, {
           width: dimensions.height,
           height: dimensions.width,
@@ -394,20 +275,11 @@ function LabelMaker() {
             transform: 'scale(1)',
             margin: 0,
             padding: 0,
-            backgroundColor: '#FFFFFF',
           },
-          backgroundColor: '#FFFFFF',
           cacheBust: true,
           pixelRatio: 1,
           quality: 1,
-          includeQueryParams: true,
-          skipAutoScale: true,
-          canvasWidth: dimensions.height,
-          canvasHeight: dimensions.width,
         });
-
-        // Remove export-mode class
-        previewRef.current.classList.remove('export-mode');
 
         const link = document.createElement('a');
         link.download = 'label.png';
@@ -415,7 +287,6 @@ function LabelMaker() {
         link.click();
 
       } catch (error) {
-        previewRef.current.classList.remove('export-mode');
         console.error('Error generating image:', error);
       }
     }
@@ -593,6 +464,93 @@ function LabelMaker() {
     
     return Math.min(fontSize, maxFontSize);
   };
+
+  // Add getIconComponent at the start of the component
+  const getIconComponent = useCallback((iconType, drive, head, customIcon, showHeadIcon, showDriveIcon, showIcon) => {
+    if (customIcon) {
+      return (
+        <Box
+          component="img"
+          src={customIcon}
+          alt="Custom icon"
+          sx={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+          }}
+        />
+      );
+    }
+
+    switch (iconType) {
+      case 'Washers':
+        return showIcon ? <TripOriginIcon sx={{ width: '100%', height: '100%' }} /> : null;
+      case 'Nuts':
+        return showIcon ? (
+          <Box
+            component="img"
+            src={NutIcon}
+            alt="Nut icon"
+            sx={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+            }}
+          />
+        ) : null;
+      case 'Screws':
+        const driveIcon = driveIcons[drive];
+        const headIcon = headIcons[head];
+        
+        return (
+          <Box 
+            sx={{ 
+              width: '100%', 
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              p: 0,
+              m: 0,
+            }}
+          >
+            {headIcon && showHeadIcon && (
+              <Box
+                component="img"
+                src={headIcon}
+                alt={`${head} head icon`}
+                sx={{
+                  width: '100%',
+                  height: showDriveIcon ? '50%' : '100%',
+                  objectFit: 'contain',
+                  display: 'block',
+                  p: 0,
+                  m: 0,
+                }}
+              />
+            )}
+            {driveIcon && showDriveIcon && (
+              <Box
+                component="img"
+                src={driveIcon}
+                alt={`${drive} drive icon`}
+                sx={{
+                  width: '100%',
+                  height: showHeadIcon ? '50%' : '100%',
+                  objectFit: 'contain',
+                  display: 'block',
+                  p: 0,
+                  m: 0,
+                }}
+              />
+            )}
+          </Box>
+        );
+      default:
+        return null;
+    }
+  }, []);
 
   return (
     <Stack spacing={3}>
@@ -1104,62 +1062,40 @@ function LabelMaker() {
           sx={{
             width: dimensions.height,
             height: dimensions.width,
-            border: '1px solid #44475a',
+            border: '1px solid #ccc',
             borderRadius: 1,
             display: 'flex',
             alignItems: 'center',
-            p: 0,
+            p: 1,
             mb: 3,
             bgcolor: '#f8f8f2',
-            '&.export-mode': {
-              border: 'none',
-              borderRadius: 0,
-              bgcolor: '#FFFFFF',
-              '& *': {  // Target all children elements in export mode
-                color: '#000000 !important',
-                fill: '#000000 !important',
-                stroke: '#000000 !important',
-              },
-              '& img': {  // Target SVG and image elements
-                filter: 'brightness(0)',
-              }
-            }
           }}
         >
           {config.icon.type !== 'None' && (
-            (config.icon.type === 'Screws' ? 
-              (config.icon.showHeadIcon || config.icon.showDriveIcon) : 
-              config.icon.showIcon
-            ) && (
-              <Box 
-                sx={{ 
-                  width: dimensions.width,
-                  height: dimensions.width,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mr: 1,
-                  flexShrink: 0,
-                  color: '#282a36',
-                }} 
-              >
-                {getIconComponent(
-                  config.icon.type, 
-                  config.icon.drive, 
-                  config.icon.head, 
-                  config.icon.customIcon,
-                  config.icon.showHeadIcon,
-                  config.icon.showDriveIcon,
-                  config.icon.showIcon
-                )}
-              </Box>
-            )
+            <Box 
+              sx={{ 
+                width: dimensions.width,
+                height: dimensions.width,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mr: 1,
+                flexShrink: 0,
+                color: '#282a36',
+              }} 
+            >
+              {getIconComponent(
+                config.icon.type, 
+                config.icon.drive, 
+                config.icon.head, 
+                config.icon.customIcon,
+                config.icon.showHeadIcon,
+                config.icon.showDriveIcon,
+                config.icon.showIcon
+              )}
+            </Box>
           )}
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            width: '100%',
-          }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
             {config.text.lineContents.map((line, index) => (
               <Typography
                 key={index}
