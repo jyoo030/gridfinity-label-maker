@@ -319,49 +319,62 @@ function LabelMaker() {
   const exportImage = async () => {
     if (previewRef.current) {
       try {
-        // Add export-mode class before generating image
-        previewRef.current.classList.add('export-mode');
+        // Pre-load all SVG icons
+        const preloadAllIcons = async () => {
+          const allIconPromises = [];
+          
+          // Load all drive icons
+          Object.values(driveIcons).forEach(iconSrc => {
+            allIconPromises.push(new Promise((resolve, reject) => {
+              const img = new Image();
+              img.crossOrigin = "anonymous";
+              img.onload = () => resolve(img);
+              img.onerror = reject;
+              img.src = iconSrc;
+            }));
+          });
 
-        // Create an array of promises for all possible icons that need to be loaded
-        const iconPromises = [];
+          // Load all head icons
+          Object.values(headIcons).forEach(iconSrc => {
+            allIconPromises.push(new Promise((resolve, reject) => {
+              const img = new Image();
+              img.crossOrigin = "anonymous";
+              img.onload = () => resolve(img);
+              img.onerror = reject;
+              img.src = iconSrc;
+            }));
+          });
 
-        // Helper function to create image load promise
-        const createImageLoadPromise = (src) => {
-          return new Promise((resolve, reject) => {
+          // Load nut icon
+          allIconPromises.push(new Promise((resolve, reject) => {
             const img = new Image();
-            img.crossOrigin = "anonymous";  // Add this to handle CORS
+            img.crossOrigin = "anonymous";
             img.onload = () => resolve(img);
             img.onerror = reject;
-            img.src = src;
-          });
+            img.src = NutIcon;
+          }));
+
+          // Load custom icon if present
+          if (config.icon.customIcon) {
+            allIconPromises.push(new Promise((resolve, reject) => {
+              const img = new Image();
+              img.crossOrigin = "anonymous";
+              img.onload = () => resolve(img);
+              img.onerror = reject;
+              img.src = config.icon.customIcon;
+            }));
+          }
+
+          await Promise.all(allIconPromises);
         };
 
-        // Add custom icon if present
-        if (config.icon.customIcon) {
-          iconPromises.push(createImageLoadPromise(config.icon.customIcon));
-        }
+        // Pre-load all icons first
+        await preloadAllIcons();
 
-        // Add nut icon if needed
-        if (config.icon.type === 'Nuts' && config.icon.showIcon) {
-          iconPromises.push(createImageLoadPromise(NutIcon));
-        }
+        // Add export-mode class
+        previewRef.current.classList.add('export-mode');
 
-        // Add screw icons if needed
-        if (config.icon.type === 'Screws') {
-          if (config.icon.showHeadIcon) {
-            const headIcon = headIcons[config.icon.head];
-            iconPromises.push(createImageLoadPromise(headIcon));
-          }
-          if (config.icon.showDriveIcon) {
-            const driveIcon = driveIcons[config.icon.drive];
-            iconPromises.push(createImageLoadPromise(driveIcon));
-          }
-        }
-
-        // Wait for all icons to load
-        await Promise.all(iconPromises);
-
-        // Add a small delay to ensure DOM updates are complete
+        // Add a delay to ensure DOM updates
         await new Promise(resolve => setTimeout(resolve, 100));
 
         // Generate the PNG
@@ -384,7 +397,7 @@ function LabelMaker() {
           canvasHeight: dimensions.width,
         });
 
-        // Remove export-mode class after generating image
+        // Remove export-mode class
         previewRef.current.classList.remove('export-mode');
 
         const link = document.createElement('a');
@@ -393,10 +406,8 @@ function LabelMaker() {
         link.click();
 
       } catch (error) {
-        // Remove export-mode class in case of error
         previewRef.current.classList.remove('export-mode');
         console.error('Error generating image:', error);
-        // You might want to show an error message to the user here
       }
     }
   };
