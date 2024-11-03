@@ -186,6 +186,7 @@ function LabelMaker() {
       rawDpi: '180',
       rawTapeLength: '36',
       rawTapeWidth: '12',
+      lockLength: true,
     },
     icon: {
       type: 'Screws',
@@ -412,14 +413,25 @@ function LabelMaker() {
   };
 
   const handlePrinterChange = (field, rawField, value) => {
-    setConfig(prev => ({
-      ...prev,
-      printer: {
-        ...prev.printer,
-        [rawField]: value,
-        [field]: value === '' ? 0 : Number(value),
-      },
-    }));
+    setConfig(prev => {
+      const newConfig = {
+        ...prev,
+        printer: {
+          ...prev.printer,
+          [rawField]: value,
+          [field]: value === '' ? 0 : Number(value),
+        },
+      };
+
+      // If we're unlocking the length, immediately calculate and set the required length
+      if (field === 'lockLength' && value === false) {
+        const requiredLength = calculateRequiredLength();
+        newConfig.printer.tapeLengthMm = requiredLength;
+        newConfig.printer.rawTapeLength = requiredLength.toString();
+      }
+
+      return newConfig;
+    });
   };
 
   const handleLineStyleChange = (lineIndex, field, value, rawField) => {
@@ -496,6 +508,60 @@ function LabelMaker() {
     italicSettings
   ]);
 
+  // Update the calculateRequiredLength function with more precise calculations
+  const calculateRequiredLength = () => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    let totalWidth = 0;
+
+    // Calculate icon width if present
+    if (config.icon.type !== 'None' && 
+        ((config.icon.type === 'Screws' && (config.icon.showHeadIcon || config.icon.showDriveIcon)) || 
+         (config.icon.type !== 'Screws' && config.icon.showIcon))) {
+      // Icon takes up width equal to the tape width (square aspect ratio)
+      totalWidth += config.printer.tapeWidthMm;
+    }
+
+    // Calculate width needed for text
+    let maxTextWidth = 0;
+    config.text.lineContents.forEach(line => {
+      const text = line.text || `Line ${config.text.lineContents.indexOf(line) + 1}`;
+      ctx.font = `${line.italic ? 'italic ' : ''}${line.bold ? 'bold ' : ''}${line.fontSize}px "${config.text.font}"`;
+      const metrics = ctx.measureText(text);
+      maxTextWidth = Math.max(maxTextWidth, metrics.width);
+    });
+
+    // Convert text pixels to mm
+    const pixelsPerMm = config.printer.dpi / 25.4;
+    const textWidthMm = Math.ceil(maxTextWidth / pixelsPerMm);
+    
+    totalWidth += textWidthMm;
+
+    return Math.max(totalWidth, 8); // Minimum 8mm length
+  };
+
+  // Update useEffect to handle both growth and shrinking
+  useEffect(() => {
+    if (!config.printer.lockLength) {
+      const requiredLength = calculateRequiredLength();
+      // Only update if the difference is more than 1mm to prevent minor fluctuations
+      if (Math.abs(requiredLength - config.printer.tapeLengthMm) > 1) {
+        handlePrinterChange('tapeLengthMm', 'rawTapeLength', requiredLength.toString());
+      }
+    }
+  }, [
+    config.text.lineContents.map(line => line.text).join(''), // Track actual text content
+    config.text.lineContents.map(line => line.fontSize).join(''), // Track font sizes
+    config.text.font,
+    config.printer.lockLength,
+    config.printer.dpi,
+    config.icon.type,
+    config.icon.showHeadIcon,
+    config.icon.showDriveIcon,
+    config.icon.showIcon,
+    config.printer.tapeWidthMm
+  ]);
+
   return (
     <Stack spacing={3}>
       <Box>
@@ -535,14 +601,30 @@ function LabelMaker() {
                 ))}
               </Select>
             </FormControl>
-            <TextField
-              fullWidth
-              type="number"
-              label="Tape Length (mm)"
-              value={config.printer.rawTapeLength}
-              onChange={(e) => handlePrinterChange('tapeLengthMm', 'rawTapeLength', e.target.value)}
-              inputProps={{ min: 8, max: 100 }}
-            />
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Tape Length (mm)"
+                value={config.printer.rawTapeLength}
+                onChange={(e) => handlePrinterChange('tapeLengthMm', 'rawTapeLength', e.target.value)}
+                inputProps={{ 
+                  min: 8,
+                  max: 100,
+                  disabled: !config.printer.lockLength 
+                }}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={config.printer.lockLength}
+                    onChange={(e) => handlePrinterChange('lockLength', 'lockLength', e.target.checked)}
+                  />
+                }
+                label="Custom Length"
+                sx={{ mt: -1 }} // Align with TextField
+              />
+            </Box>
             <Typography variant="body2" color="textSecondary">
               Output dimensions: {dimensions.width}px × {dimensions.height}px
             </Typography>
