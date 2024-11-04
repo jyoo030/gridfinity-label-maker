@@ -1,5 +1,5 @@
-export { default as PhillipsDrive } from './phillips_driver.svg';
-export { default as SlottedDrive } from './slotted_driver.svg';
-export { default as HexDrive } from './hex_driver.svg';
-export { default as SquareDrive } from './square_driver.svg';
-export { default as TorxDrive } from './torx_driver.svg'; 
+export { default as PhillipsDrive } from './Head_Phillips.png';
+export { default as FlatDrive } from './Head_Flat.png';
+export { default as HexDrive } from './Head_Hex.png';
+export { default as RobinsonDrive } from './Head_Robinson.png';
+export { default as TorxDrive } from './Head_Torx.png';

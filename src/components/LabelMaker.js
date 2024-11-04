@@ -21,16 +21,15 @@ import { calculatePixelDimensions } from '../utils/calculations';
 import UploadIcon from '@mui/icons-material/Upload';
 import {
   PhillipsDrive,
-  SlottedDrive,
+  FlatDrive,
   HexDrive,
-  SquareDrive,
+  RobinsonDrive,
   TorxDrive,
 } from '../images/drivers';
 
 import {
   FlatHead,
   HexHead,
-  ButtonHead,
   PanHead,
   RoundHead,
 } from '../images/heads';
@@ -41,7 +40,7 @@ import PrintIcon from '@mui/icons-material/Print';
 const iconOptions = {
   types: ['None', 'Screws', 'Nuts', 'Washers'],
   sizes: ['M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'M10', 'M12', 'M14', 'M16', 'M18', 'M20'],
-  heads: ['Flat', 'Hex', 'Button', 'Pan', 'Round'],
+  heads: ['Flat', 'Hex', 'Pan', 'Round'],
   drives: ['Hex', 'Phillips', 'Slotted', 'Square', 'Torx'],
 };
 
@@ -80,16 +79,15 @@ const fontSizeOptions = Array.from({ length: 113 }, (_, i) => i + 8);
 // Create mappings for the SVG files
 const driveIcons = {
   Phillips: PhillipsDrive,
-  Slotted: SlottedDrive,
+  Slotted: FlatDrive,
   Hex: HexDrive,
-  Square: SquareDrive,
+  Square: RobinsonDrive,
   Torx: TorxDrive,
 };
 
 const headIcons = {
   Flat: FlatHead,
   Hex: HexHead,
-  Button: ButtonHead,
   Pan: PanHead,
   Round: RoundHead,
 };

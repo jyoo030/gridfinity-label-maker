@@ -1,5 +1,4 @@
-export { default as FlatHead } from './flat.svg';
-export { default as HexHead } from './hex.svg';
-export { default as ButtonHead } from './button.svg';
-export { default as PanHead } from './pan.svg';
-export { default as RoundHead } from './round.svg'; 
+export { default as FlatHead } from './Screw_Flat.png';
+export { default as HexHead } from './Screw_Hex.png';
+export { default as PanHead } from './Screw_Pan.png';
+export { default as RoundHead } from './Screw_Round.png';
