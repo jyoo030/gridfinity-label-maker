@@ -36,6 +36,7 @@ import {
 } from '../images/heads';
 
 import NutIcon from '../images/nut.svg';
+import PrintIcon from '@mui/icons-material/Print';
 
 const iconOptions = {
   types: ['None', 'Screws', 'Nuts', 'Washers'],
@@ -617,6 +618,138 @@ function LabelMaker() {
         return null;
     }
   }, []);
+
+  const handlePrint = useCallback(async () => {
+    if (previewRef.current) {
+      try {
+        // Add export-mode class before generating image
+        previewRef.current.classList.add('export-mode');
+
+        // Create a new window for printing
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+          alert('Please allow popups for printing');
+          return;
+        }
+
+        // Calculate physical dimensions in mm
+        const labelWidthMm = config.printer.tapeWidthMm;
+        const labelLengthMm = config.printer.tapeLengthMm;
+
+        // Write the print HTML with updated styles
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>Print Label</title>
+              <style>
+                @page {
+                  size: ${labelLengthMm}mm ${labelWidthMm}mm;
+                  margin: 0;
+                  padding: 0;
+                }
+                html {
+                  margin: 0;
+                  padding: 0;
+                  width: ${labelLengthMm}mm;
+                  height: ${labelWidthMm}mm;
+                }
+                body {
+                  margin: 0;
+                  padding: 0;
+                  width: ${labelLengthMm}mm;
+                  height: ${labelWidthMm}mm;
+                  overflow: hidden;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                }
+                .container {
+                  width: ${labelLengthMm}mm;
+                  height: ${labelWidthMm}mm;
+                  position: relative;
+                  background-color: white;
+                }
+                img {
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  width: ${labelLengthMm}mm;
+                  height: ${labelWidthMm}mm;
+                  object-fit: fill;
+                }
+                @media print {
+                  @page {
+                    size: ${labelLengthMm}mm ${labelWidthMm}mm;
+                    margin: 0;
+                  }
+                  html, body, .container, img {
+                    width: ${labelLengthMm}mm !important;
+                    height: ${labelWidthMm}mm !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                  }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container"></div>
+            </body>
+          </html>
+        `);
+
+        // Generate the image and add it to the print window
+        const dataUrl = await toPng(previewRef.current, {
+          width: dimensions.height,
+          height: dimensions.width,
+          style: {
+            transform: 'scale(1)',
+            margin: 0,
+            padding: 0,
+            backgroundColor: '#FFFFFF',
+          },
+          filter: (node) => {
+            if (node instanceof HTMLElement) {
+              node.style.color = '#000000';
+              node.style.fill = '#000000';
+              node.style.stroke = '#000000';
+            }
+            return true;
+          },
+          backgroundColor: '#FFFFFF',
+          cacheBust: true,
+          pixelRatio: 1,
+          quality: 1,
+          canvasWindow: window,
+          imageSmoothingEnabled: false,
+        });
+
+        // Add the image to the print window
+        const img = printWindow.document.createElement('img');
+        img.src = dataUrl;
+        const container = printWindow.document.querySelector('.container');
+        container.appendChild(img);
+
+        // Print the window
+        printWindow.document.close();
+        printWindow.focus();
+        
+        // Wait for image to load before printing
+        img.onload = () => {
+          printWindow.print();
+          // Close the window after printing (or if printing is cancelled)
+          setTimeout(() => {
+            printWindow.close();
+          }, 1000);
+        };
+
+      } catch (error) {
+        console.error('Error printing:', error);
+      } finally {
+        previewRef.current.classList.remove('export-mode');
+      }
+    }
+  }, [config.printer.tapeWidthMm, config.printer.tapeLengthMm, dimensions.height, dimensions.width]);
 
   return (
     <Stack spacing={3}>
@@ -1201,9 +1334,18 @@ function LabelMaker() {
           </Box>
         </Box>
 
-        <Button variant="contained" onClick={exportImage}>
-          Export as PNG ({dimensions.height}×{dimensions.width})
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button variant="contained" onClick={exportImage}>
+            Export as PNG ({dimensions.height}×{dimensions.width})
+          </Button>
+          <Button 
+            variant="contained" 
+            onClick={handlePrint}
+            startIcon={<PrintIcon />}
+          >
+            Print Label
+          </Button>
+        </Box>
       </Box>
     </Stack>
   );
