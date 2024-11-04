@@ -625,19 +625,22 @@ function LabelMaker() {
         // Add export-mode class before generating image
         previewRef.current.classList.add('export-mode');
 
-        // Create a new window for printing
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) {
-          alert('Please allow popups for printing');
-          return;
-        }
-
         // Calculate physical dimensions in mm
         const labelWidthMm = config.printer.tapeWidthMm;
         const labelLengthMm = config.printer.tapeLengthMm;
 
+        // Create an invisible iframe
+        const iframe = document.createElement('iframe');
+        iframe.style.visibility = 'hidden';
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        document.body.appendChild(iframe);
+
         // Write the print HTML with updated styles
-        printWindow.document.write(`
+        iframe.contentDocument.write(`
           <!DOCTYPE html>
           <html>
             <head>
@@ -646,13 +649,6 @@ function LabelMaker() {
                 @page {
                   size: ${labelLengthMm}mm ${labelWidthMm}mm;
                   margin: 0;
-                  padding: 0;
-                }
-                html {
-                  margin: 0;
-                  padding: 0;
-                  width: ${labelLengthMm}mm;
-                  height: ${labelWidthMm}mm;
                 }
                 body {
                   margin: 0;
@@ -660,45 +656,41 @@ function LabelMaker() {
                   width: ${labelLengthMm}mm;
                   height: ${labelWidthMm}mm;
                   overflow: hidden;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
                 }
-                .container {
+                .print-container {
                   width: ${labelLengthMm}mm;
                   height: ${labelWidthMm}mm;
                   position: relative;
                   background-color: white;
+                  transform-origin: top left;
                 }
                 img {
-                  position: absolute;
-                  top: 0;
-                  left: 0;
-                  width: ${labelLengthMm}mm;
-                  height: ${labelWidthMm}mm;
-                  object-fit: fill;
+                  width: 100%;
+                  height: 100%;
+                  object-fit: contain;
+                  display: block;
                 }
                 @media print {
-                  @page {
-                    size: ${labelLengthMm}mm ${labelWidthMm}mm;
-                    margin: 0;
+                  html, body {
+                    width: ${labelLengthMm}mm;
+                    height: ${labelWidthMm}mm;
                   }
-                  html, body, .container, img {
-                    width: ${labelLengthMm}mm !important;
-                    height: ${labelWidthMm}mm !important;
-                    margin: 0 !important;
-                    padding: 0 !important;
+                  .print-container {
+                    page-break-inside: avoid;
+                    break-inside: avoid;
                   }
                 }
               </style>
             </head>
             <body>
-              <div class="container"></div>
+              <div class="print-container">
+                <img />
+              </div>
             </body>
           </html>
         `);
 
-        // Generate the image and add it to the print window
+        // Generate the image
         const dataUrl = await toPng(previewRef.current, {
           width: dimensions.height,
           height: dimensions.width,
@@ -724,23 +716,23 @@ function LabelMaker() {
           imageSmoothingEnabled: false,
         });
 
-        // Add the image to the print window
-        const img = printWindow.document.createElement('img');
+        // Set the image source
+        const img = iframe.contentDocument.querySelector('img');
         img.src = dataUrl;
-        const container = printWindow.document.querySelector('.container');
-        container.appendChild(img);
 
-        // Print the window
-        printWindow.document.close();
-        printWindow.focus();
-        
-        // Wait for image to load before printing
+        // Print after image loads
         img.onload = () => {
-          printWindow.print();
-          // Close the window after printing (or if printing is cancelled)
+          iframe.contentDocument.close();
+          
+          // Short delay to ensure styles are applied
           setTimeout(() => {
-            printWindow.close();
-          }, 1000);
+            iframe.contentWindow.print();
+            
+            // Remove iframe after printing
+            setTimeout(() => {
+              document.body.removeChild(iframe);
+            }, 1000);
+          }, 200);
         };
 
       } catch (error) {
