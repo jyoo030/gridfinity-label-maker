@@ -1277,7 +1277,8 @@ function LabelMaker() {
           {config.icon.type !== 'None' && (
             <Box 
               sx={{ 
-                width: dimensions.width,
+                width: config.icon.type === 'Screws' && config.icon.showHeadIcon && config.icon.showDriveIcon ? 
+                  dimensions.width / 2 : dimensions.width,
                 height: dimensions.width,
                 display: 'flex',
                 alignItems: 'center',
