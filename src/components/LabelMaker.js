@@ -34,14 +34,28 @@ import {
   RoundHead,
 } from '../images/heads';
 
-import NutIcon from '../images/nut.svg';
+import {
+  StandardNut,
+  LockNut,
+  CapNut,
+} from '../images/nuts';
+
 import PrintIcon from '@mui/icons-material/Print';
+import {
+  FenderWasher,
+  FlatWasher,
+  SplitWasher,
+  StarExteriorWasher,
+  StarInteriorWasher,
+} from '../images/washers';
 
 const iconOptions = {
   types: ['None', 'Screws', 'Nuts', 'Washers'],
   sizes: ['M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'M10', 'M12', 'M14', 'M16', 'M18', 'M20'],
   heads: ['Flat', 'Hex', 'Pan', 'Round'],
   drives: ['Hex', 'Phillips', 'Slotted', 'Square', 'Torx'],
+  nutTypes: ['Standard', 'Lock', 'Cap'],
+  washerTypes: ['Flat', 'Fender', 'Split', 'Star Exterior', 'Star Interior'],
 };
 
 const fonts = [
@@ -92,18 +106,33 @@ const headIcons = {
   Round: RoundHead,
 };
 
+const nutIcons = {
+  Standard: StandardNut,
+  Lock: LockNut,
+  Cap: CapNut,
+};
+
 // Add this helper function to generate the autofill text
 const generateAutofillText = (icon) => {
   switch (icon.type) {
     case 'Screws':
       return [`${icon.size}×${icon.length}`, `${icon.head} ${icon.drive}`];
     case 'Nuts':
-      return [`${icon.size}`, ''];
+      return [`${icon.size}`, `${icon.nutType}`];
     case 'Washers':
-      return [`${icon.size}`, ''];
+      return [`${icon.size}`, `${icon.washerType}`];
     default:
       return ['', ''];
   }
+};
+
+// Add washer icons mapping after the other icon mappings
+const washerIcons = {
+  'Flat': FlatWasher,
+  'Fender': FenderWasher,
+  'Split': SplitWasher,
+  'Star Exterior': StarExteriorWasher,
+  'Star Interior': StarInteriorWasher,
 };
 
 function LabelMaker() {
@@ -127,6 +156,8 @@ function LabelMaker() {
       showHeadIcon: true,
       showDriveIcon: true,
       showIcon: true,
+      nutType: 'Standard',
+      washerType: 'Flat',
     },
     text: {
       font: 'Arial',
@@ -263,7 +294,7 @@ function LabelMaker() {
             iconPromises.push(loadIcon(driveIcons[config.icon.drive]));
           }
         } else if (config.icon.type === 'Nuts') {
-          iconPromises.push(loadIcon(NutIcon));
+          iconPromises.push(loadIcon(nutIcons[config.icon.nutType]));
         }
 
         await Promise.all(iconPromises);
@@ -531,7 +562,7 @@ function LabelMaker() {
   };
 
   // Add getIconComponent at the start of the component
-  const getIconComponent = useCallback((iconType, drive, head, customIcon, showHeadIcon, showDriveIcon, showIcon) => {
+  const getIconComponent = useCallback((iconType, drive, head, customIcon, showHeadIcon, showDriveIcon, showIcon, nutType, washerType) => {
     if (customIcon) {
       return (
         <Box
@@ -549,13 +580,24 @@ function LabelMaker() {
 
     switch (iconType) {
       case 'Washers':
-        return showIcon ? <TripOriginIcon sx={{ width: '100%', height: '100%' }} /> : null;
+        return showIcon ? (
+          <Box
+            component="img"
+            src={washerIcons[washerType]}
+            alt={`${washerType} washer icon`}
+            sx={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+            }}
+          />
+        ) : null;
       case 'Nuts':
         return showIcon ? (
           <Box
             component="img"
-            src={NutIcon}
-            alt="Nut icon"
+            src={nutIcons[nutType]}
+            alt={`${nutType} nut icon`}
             sx={{
               width: '100%',
               height: '100%',
@@ -869,6 +911,42 @@ function LabelMaker() {
                     ))}
                   </Select>
                 </FormControl>
+
+                {config.icon.type === 'Washers' && (
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel id="washer-type-label">Washer Type</InputLabel>
+                    <Select
+                      labelId="washer-type-label"
+                      label="Washer Type"
+                      value={config.icon.washerType}
+                      onChange={(e) => handleConfigChange('icon', 'washerType', e.target.value)}
+                    >
+                      {iconOptions.washerTypes.map((option) => (
+                        <MenuItem key={option} value={option}>
+                          {option}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                )}
+
+                {config.icon.type === 'Nuts' && (
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel id="nut-type-label">Nut Type</InputLabel>
+                    <Select
+                      labelId="nut-type-label"
+                      label="Nut Type"
+                      value={config.icon.nutType}
+                      onChange={(e) => handleConfigChange('icon', 'nutType', e.target.value)}
+                    >
+                      {iconOptions.nutTypes.map((option) => (
+                        <MenuItem key={option} value={option}>
+                          {option}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                )}
 
                 {config.icon.type === 'Screws' && (
                   <>
@@ -1295,7 +1373,9 @@ function LabelMaker() {
                 config.icon.customIcon,
                 config.icon.showHeadIcon,
                 config.icon.showDriveIcon,
-                config.icon.showIcon
+                config.icon.showIcon,
+                config.icon.nutType,
+                config.icon.washerType
               )}
             </Box>
           )}
