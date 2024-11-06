@@ -137,8 +137,6 @@ function LabelMaker() {
     });
   };
 
-  let firstScrew = true;
-  let firstNut = true;
   const exportImage = async () => {
     if (previewRef.current) {
       try {
@@ -170,37 +168,6 @@ function LabelMaker() {
         }
 
         await Promise.all(iconPromises);
-
-        if (firstScrew && config.icon.type === 'Screws') {
-          await toPng(previewRef.current, {
-            width: dimensions.height,
-            height: dimensions.width,
-            style: {
-              transform: 'scale(1)',
-              margin: 0,
-              padding: 0,
-            },
-            cacheBust: true,
-            pixelRatio: 1,
-            quality: 1,
-          });
-          firstScrew = false;
-        }
-        if (firstNut && config.icon.type === 'Nuts') {
-          await toPng(previewRef.current, {
-            width: dimensions.height,
-            height: dimensions.width,
-            style: {
-              transform: 'scale(1)',
-              margin: 0,
-              padding: 0,
-            },
-            cacheBust: true,
-            pixelRatio: 1,
-            quality: 1,
-          });
-          firstNut = false;
-        }
 
         const dataUrl = await toPng(previewRef.current, {
           width: dimensions.height,
