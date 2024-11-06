@@ -1,103 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import {
-  Stack,
-  Box,
-  Typography,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  TextField,
-  Button,
-  FormControlLabel,
-  Checkbox,
-} from '@mui/material';
-import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
-import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter';
-import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight';
-import TripOriginIcon from '@mui/icons-material/TripOrigin';
+import { Stack, Box, Typography } from '@mui/material';
 import { toPng } from 'html-to-image';
 import { calculatePixelDimensions } from '../utils/calculations';
-import UploadIcon from '@mui/icons-material/Upload';
-import {
-  PhillipsDrive,
-  FlatDrive,
-  HexDrive,
-  RobinsonDrive,
-  TorxDrive,
-} from '../images/drivers';
-
-import {
-  FlatHead,
-  HexHead,
-  PanHead,
-  RoundHead,
-} from '../images/heads';
-
-import {
-  StandardNut,
-  LockNut,
-  CapNut,
-} from '../images/nuts';
-
-import PrintIcon from '@mui/icons-material/Print';
-import {
-  FenderWasher,
-  FlatWasher,
-  SplitWasher,
-  StarExteriorWasher,
-  StarInteriorWasher,
-} from '../images/washers';
-
 import IconSettings from './IconSettings';
 import PrinterSettings from './PrinterSettings';
 import TextSettings from './TextSettings';
+import LabelPreview from './LabelPreview';
 import { styles } from '../styles/LabelMaker.styles';
-
-// Create mappings for the SVG files
-const driveIcons = {
-  Phillips: PhillipsDrive,
-  Slotted: FlatDrive,
-  Hex: HexDrive,
-  Square: RobinsonDrive,
-  Torx: TorxDrive,
-};
-
-const headIcons = {
-  Flat: FlatHead,
-  Hex: HexHead,
-  Pan: PanHead,
-  Round: RoundHead,
-};
-
-const nutIcons = {
-  Standard: StandardNut,
-  Lock: LockNut,
-  Cap: CapNut,
-};
-
-// Add this helper function to generate the autofill text
-const generateAutofillText = (icon) => {
-  switch (icon.type) {
-    case 'Screws':
-      return [`${icon.size}×${icon.length}`, `${icon.head} ${icon.drive}`];
-    case 'Nuts':
-      return [`${icon.size}`, `${icon.nutType}`];
-    case 'Washers':
-      return [`${icon.size}`, `${icon.washerType}`];
-    default:
-      return ['', ''];
-  }
-};
-
-// Add washer icons mapping after the other icon mappings
-const washerIcons = {
-  'Flat': FlatWasher,
-  'Fender': FenderWasher,
-  'Split': SplitWasher,
-  'Star Exterior': StarExteriorWasher,
-  'Star Interior': StarInteriorWasher,
-};
+import { driveIcons, headIcons, nutIcons, washerIcons } from '../utils/iconMappings';
 
 function LabelMaker() {
   const [config, setConfig] = useState({
@@ -292,7 +202,6 @@ function LabelMaker() {
           firstNut = false;
         }
 
-        // Generate PNG with strict black and white
         const dataUrl = await toPng(previewRef.current, {
           width: dimensions.height,
           height: dimensions.width,
@@ -452,7 +361,6 @@ function LabelMaker() {
     textItalicSettings
   ]);
 
-  // Update useEffect for auto-length calculation
   useEffect(() => {
     if (!config.printer.customLength) {
       const requiredLength = calculateRequiredLength();
@@ -474,7 +382,6 @@ function LabelMaker() {
     handlePrinterChange
   ]);
 
-  // Update the calculateMaxFontSize function
   const calculateMaxFontSize = (lines, width, height, font) => {
     if (lines.length === 0) return 12; // Default size for no text
     
@@ -523,7 +430,6 @@ function LabelMaker() {
     return Math.min(fontSize, maxFontSize);
   };
 
-  // Add getIconComponent at the start of the component
   const getIconComponent = useCallback((iconType, drive, head, customIcon, showHeadIcon, showDriveIcon, showIcon, nutType, washerType) => {
     if (customIcon) {
       return (
@@ -753,7 +659,6 @@ function LabelMaker() {
         </Typography>
       </Box>
 
-      {/* Main layout */}
       <Box sx={styles.mainContainer}>
         <PrinterSettings 
           config={config}
@@ -778,71 +683,14 @@ function LabelMaker() {
         />
       </Box>
 
-      {/* Preview Section */}
-      <Box>
-        <Typography variant="h6" gutterBottom>
-          Label Preview
-        </Typography>
-        
-        {/* Actual size preview */}
-        <Box
-          ref={previewRef}
-          sx={styles.preview}
-        >
-          {config.icon.type !== 'None' && (
-            <Box sx={() => styles.iconContainer({ config, dimensions })}>
-              {getIconComponent(
-                config.icon.type, 
-                config.icon.drive, 
-                config.icon.head, 
-                config.icon.customIcon,
-                config.icon.showHeadIcon,
-                config.icon.showDriveIcon,
-                config.icon.showIcon,
-                config.icon.nutType,
-                config.icon.washerType
-              )}
-            </Box>
-          )}
-          <Box sx={styles.textContainer}>
-            {config.text.lineContents.map((line, index) => (
-              <Typography
-                key={index}
-                style={{
-                  fontFamily: config.text.font,
-                  fontSize: `${line.fontSize}px`,
-                  fontWeight: line.bold ? 'bold' : 'normal',
-                  fontStyle: line.italic ? 'italic' : 'normal',
-                  textDecoration: [
-                    line.underline && 'underline',
-                    line.strikethrough && 'line-through'
-                  ].filter(Boolean).join(' '),
-                  marginBottom: 0,
-                  textAlign: line.textAlign,
-                  width: '100%',
-                  color: '#282a36',
-                  lineHeight: 1,
-                }}
-              >
-                {line.text || `Line ${index + 1}`}
-              </Typography>
-            ))}
-          </Box>
-        </Box>
-
-        <Box sx={styles.buttonContainer}>
-          <Button variant="contained" onClick={exportImage}>
-            Export as PNG ({dimensions.height}×{dimensions.width})
-          </Button>
-          <Button 
-            variant="contained" 
-            onClick={handlePrint}
-            startIcon={<PrintIcon />}
-          >
-            Print Label
-          </Button>
-        </Box>
-      </Box>
+      <LabelPreview 
+        previewRef={previewRef}
+        config={config}
+        dimensions={dimensions}
+        getIconComponent={getIconComponent}
+        exportImage={exportImage}
+        handlePrint={handlePrint}
+      />
     </Stack>
   );
 }
