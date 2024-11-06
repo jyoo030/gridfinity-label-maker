@@ -68,10 +68,16 @@ function LabelMaker() {
     let totalWidth = 0;
 
     // Calculate icon width if present
-    if (config.icon.type !== 'None' && 
-        ((config.icon.type === 'Screws' && (config.icon.showHeadIcon || config.icon.showDriveIcon)) || 
-         (config.icon.type !== 'Screws' && config.icon.showIcon))) {
-      totalWidth += config.printer.tapeWidthMm;
+    if (config.icon.type !== 'None') {
+      if (config.icon.type === 'Screws') {
+        if (config.icon.showHeadIcon && config.icon.showDriveIcon) {
+          totalWidth += config.printer.tapeWidthMm / 2;
+        } else if (config.icon.showHeadIcon || config.icon.showDriveIcon) {
+          totalWidth += config.printer.tapeWidthMm;
+        }
+      } else if (config.icon.showIcon) {
+        totalWidth += config.printer.tapeWidthMm;
+      }
     }
 
     // Calculate width needed for text
