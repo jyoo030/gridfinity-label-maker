@@ -19,7 +19,7 @@ function LabelPreview({
       
       <Box
         ref={previewRef}
-        sx={styles.preview}
+        sx={() => styles.preview(dimensions)}
       >
         {config.icon.type !== 'None' && (
           <Box sx={() => styles.iconContainer({ config, dimensions })}>

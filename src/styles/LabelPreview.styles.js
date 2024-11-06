@@ -1,7 +1,7 @@
 export const styles = {
-  preview: {
-    width: (dimensions) => dimensions.height,
-    height: (dimensions) => dimensions.width,
+  preview: (dimensions) => ({
+    width: dimensions.height,
+    height: dimensions.width,
     border: '1px solid #ccc',
     borderRadius: 1,
     display: 'flex',
@@ -23,7 +23,7 @@ export const styles = {
         borderRadius: '0 !important',
       },
     },
-  },
+  }),
   
   iconContainer: ({ config, dimensions }) => ({ 
     width: config.icon.type === 'Screws' && config.icon.showHeadIcon && config.icon.showDriveIcon ? 
