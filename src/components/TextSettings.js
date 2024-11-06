@@ -15,6 +15,7 @@ import {
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
 import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter';
 import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight';
+import { styles } from '../styles/TextSettings.styles';
 
 const fonts = [
   'Arial',
@@ -48,7 +49,7 @@ const fontSizeOptions = Array.from({ length: 113 }, (_, i) => i + 8);
 
 function TextSettings({ config, handleConfigChange, handleLineTextChange, handleLineStyleChange, handleLinesChange }) {
   return (
-    <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
+    <Box sx={styles.container}>
       <Typography variant="h6" gutterBottom>
         Text Settings
       </Typography>
@@ -80,16 +81,7 @@ function TextSettings({ config, handleConfigChange, handleLineTextChange, handle
               <MenuItem 
                 key={font} 
                 value={font}
-                sx={{ 
-                  fontFamily: font,
-                  fontSize: '16px',
-                  '&:hover': {
-                    backgroundColor: 'action.hover',
-                  },
-                  '&.Mui-selected': {
-                    backgroundColor: 'action.selected',
-                  },
-                }}
+                sx={styles.fontMenuItem}
               >
                 {font}
               </MenuItem>
@@ -108,33 +100,15 @@ function TextSettings({ config, handleConfigChange, handleLineTextChange, handle
         {Array.from({ length: config.text.lines }, (_, index) => (
           <Box
             key={`line-${index}`}
-            sx={{
-              display: 'flex',
-              alignItems: 'stretch',
-              gap: 2,
-            }}
+            sx={styles.lineContainer}
           >
             <TextField
-              sx={{ 
-                flex: 1.2,
-                '& .MuiOutlinedInput-root': {
-                  height: '100%',
-                },
-              }}
+              sx={styles.lineTextField}
               label={`Line ${index + 1}`}
               value={config.text.lineContents[index]?.text || ''}
               onChange={(e) => handleLineTextChange(index, e.target.value)}
             />
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                width: 'fit-content',
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1,
-              }}
-            >
+            <Box sx={styles.controlsContainer}>
               <FormControl variant="outlined" disabled={config.text.fitToLabel}>
                 <InputLabel id={`font-size-label-${index}`}>Size</InputLabel>
                 <Select
@@ -147,13 +121,7 @@ function TextSettings({ config, handleConfigChange, handleLineTextChange, handle
                     Number(e.target.value),
                     'rawFontSize'
                   )}
-                  sx={{ 
-                    width: '80px',
-                    '& .MuiInputBase-input': {
-                      textAlign: 'right',
-                      paddingRight: '24px'
-                    }
-                  }}
+                  sx={styles.fontSizeSelect}
                   MenuProps={{
                     PaperProps: {
                       style: { maxHeight: 200 }
@@ -167,102 +135,53 @@ function TextSettings({ config, handleConfigChange, handleLineTextChange, handle
                   ))}
                 </Select>
               </FormControl>
-              <Box
-                sx={{
-                  display: 'flex',
-                  height: '100%',
-                  borderLeft: 1,
-                  borderColor: 'divider',
-                }}
-              >
+              <Box sx={styles.buttonGroup}>
                 <Button
                   variant={config.text.lineContents[index]?.textAlign === 'left' ? "contained" : "text"}
                   onClick={() => handleLineStyleChange(index, 'textAlign', 'left')}
-                  sx={{ 
-                    minWidth: '40px',
-                    borderRadius: 0,
-                    px: 2,
-                    borderRight: 1,
-                    borderColor: 'divider',
-                  }}
+                  sx={styles.formatButton}
                 >
                   <FormatAlignLeftIcon />
                 </Button>
                 <Button
                   variant={config.text.lineContents[index]?.textAlign === 'center' ? "contained" : "text"}
                   onClick={() => handleLineStyleChange(index, 'textAlign', 'center')}
-                  sx={{ 
-                    minWidth: '40px',
-                    borderRadius: 0,
-                    px: 2,
-                    borderRight: 1,
-                    borderColor: 'divider',
-                  }}
+                  sx={styles.formatButton}
                 >
                   <FormatAlignCenterIcon />
                 </Button>
                 <Button
                   variant={config.text.lineContents[index]?.textAlign === 'right' ? "contained" : "text"}
                   onClick={() => handleLineStyleChange(index, 'textAlign', 'right')}
-                  sx={{ 
-                    minWidth: '40px',
-                    borderRadius: 0,
-                    px: 2,
-                    borderRight: 1,
-                    borderColor: 'divider',
-                  }}
+                  sx={styles.formatButton}
                 >
                   <FormatAlignRightIcon />
                 </Button>
                 <Button
                   variant={config.text.lineContents[index]?.bold ? "contained" : "text"}
                   onClick={() => handleLineStyleChange(index, 'bold', !config.text.lineContents[index]?.bold)}
-                  sx={{ 
-                    minWidth: '40px',
-                    borderRadius: 0,
-                    px: 2,
-                    borderRight: 1,
-                    borderColor: 'divider',
-                  }}
+                  sx={styles.formatButton}
                 >
                   B
                 </Button>
                 <Button
                   variant={config.text.lineContents[index]?.italic ? "contained" : "text"}
                   onClick={() => handleLineStyleChange(index, 'italic', !config.text.lineContents[index]?.italic)}
-                  sx={{ 
-                    minWidth: '40px',
-                    borderRadius: 0,
-                    px: 2,
-                    borderRight: 1,
-                    borderColor: 'divider',
-                  }}
+                  sx={styles.formatButton}
                 >
                   I
                 </Button>
                 <Button
                   variant={config.text.lineContents[index]?.underline ? "contained" : "text"}
                   onClick={() => handleLineStyleChange(index, 'underline', !config.text.lineContents[index]?.underline)}
-                  sx={{ 
-                    minWidth: '40px',
-                    borderRadius: 0,
-                    px: 2,
-                    borderRight: 1,
-                    borderColor: 'divider',
-                  }}
+                  sx={styles.formatButton}
                 >
                   U
                 </Button>
                 <Button
                   variant={config.text.lineContents[index]?.strikethrough ? "contained" : "text"}
                   onClick={() => handleLineStyleChange(index, 'strikethrough', !config.text.lineContents[index]?.strikethrough)}
-                  sx={{ 
-                    minWidth: '40px',
-                    borderRadius: 0,
-                    borderRight: 0,
-                    borderColor: 'divider',
-                    px: 2,
-                  }}
+                  sx={styles.lastFormatButton}
                 >
                   S
                 </Button>
@@ -271,15 +190,18 @@ function TextSettings({ config, handleConfigChange, handleLineTextChange, handle
           </Box>
         ))}
 
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={config.text.fitToLabel || false}
-              onChange={(e) => handleConfigChange('text', 'fitToLabel', e.target.checked)}
-            />
-          }
-          label="Fit to Label"
-        />
+        {/* Wrap FormControlLabel in a Box with fit-content width */}
+        <Box sx={styles.fitToLabelContainer}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={config.text.fitToLabel || false}
+                onChange={(e) => handleConfigChange('text', 'fitToLabel', e.target.checked)}
+              />
+            }
+            label="Fit to Label"
+          />
+        </Box>
       </Stack>
     </Box>
   );

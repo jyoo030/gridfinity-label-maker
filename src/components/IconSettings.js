@@ -13,6 +13,7 @@ import {
   Checkbox,
 } from '@mui/material';
 import UploadIcon from '@mui/icons-material/Upload';
+import { styles } from '../styles/IconSettings.styles';
 
 const iconOptions = {
   types: ['None', 'Screws', 'Nuts', 'Washers'],
@@ -38,7 +39,7 @@ const generateAutofillText = (icon) => {
 
 function IconSettings({ config, handleConfigChange, handleCustomIconUpload, handleLinesChange, setConfig }) {
   return (
-    <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
+    <Box sx={styles.container}>
       <Typography variant="h6" gutterBottom>
         Icon Settings
       </Typography>

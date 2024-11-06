@@ -52,6 +52,7 @@ import {
 import IconSettings from './IconSettings';
 import PrinterSettings from './PrinterSettings';
 import TextSettings from './TextSettings';
+import { styles } from '../styles/LabelMaker.styles';
 
 // Create mappings for the SVG files
 const driveIcons = {
@@ -190,7 +191,7 @@ function LabelMaker() {
   const textBoldSettings = config.text.lineContents.map(line => line.bold).join('');
   const textItalicSettings = config.text.lineContents.map(line => line.italic).join('');
 
-  // Update handleConfigChange for fitToLabel
+  // Update handleConfigChange to handle fitToLabel
   const handleConfigChange = (category, field, value) => {
     setConfig(prev => {
       const newConfig = {
@@ -202,26 +203,24 @@ function LabelMaker() {
       };
 
       // If enabling fitToLabel, calculate and set font sizes
-      if (category === 'text' && field === 'fitToLabel') {
-        if (value) {
-          const availableHeight = dimensions.width; // Full height available
-          const availableWidth = dimensions.height; // Full width available
-          
-          // Calculate max font size considering all lines together
-          const maxSize = calculateMaxFontSize(
-            newConfig.text.lineContents,
-            availableWidth,
-            availableHeight,
-            newConfig.text.font
-          );
-          
-          // Update all lines to use the same font size
-          newConfig.text.lineContents = newConfig.text.lineContents.map(line => ({
-            ...line,
-            fontSize: maxSize,
-            rawFontSize: maxSize.toString(),
-          }));
-        }
+      if (category === 'text' && field === 'fitToLabel' && value === true) {
+        const availableHeight = dimensions.width; // Full height available
+        const availableWidth = dimensions.height; // Full width available
+        
+        // Calculate max font size considering all lines together
+        const maxSize = calculateMaxFontSize(
+          newConfig.text.lineContents,
+          availableWidth,
+          availableHeight,
+          newConfig.text.font
+        );
+        
+        // Update all lines to use the same font size
+        newConfig.text.lineContents = newConfig.text.lineContents.map(line => ({
+          ...line,
+          fontSize: maxSize,
+          rawFontSize: maxSize.toString(),
+        }));
       }
 
       return newConfig;
@@ -755,7 +754,7 @@ function LabelMaker() {
       </Box>
 
       {/* Main layout */}
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+      <Box sx={styles.mainContainer}>
         <PrinterSettings 
           config={config}
           handlePrinterChange={handlePrinterChange}
@@ -788,46 +787,10 @@ function LabelMaker() {
         {/* Actual size preview */}
         <Box
           ref={previewRef}
-          sx={{
-            width: dimensions.height,
-            height: dimensions.width,
-            border: '1px solid #ccc',
-            borderRadius: 1,
-            display: 'flex',
-            alignItems: 'center',
-            p: 0,
-            mb: 3,
-            bgcolor: '#f8f8f2',
-            '&.export-mode': {
-              border: 'none',
-              borderRadius: 0,
-              bgcolor: '#FFFFFF',
-              p: 0,
-              m: 0,
-              '& *': {  // Target all children elements in export mode
-                color: '#000000 !important',
-                fill: '#000000 !important',
-                stroke: '#000000 !important',
-                border: 'none !important',
-                borderRadius: '0 !important',
-              },
-            },
-          }}
+          sx={styles.preview}
         >
           {config.icon.type !== 'None' && (
-            <Box 
-              sx={{ 
-                width: config.icon.type === 'Screws' && config.icon.showHeadIcon && config.icon.showDriveIcon ? 
-                  dimensions.width / 2 : dimensions.width,
-                height: dimensions.width,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                mr: 1,
-                flexShrink: 0,
-                color: '#282a36',
-              }} 
-            >
+            <Box sx={() => styles.iconContainer({ config, dimensions })}>
               {getIconComponent(
                 config.icon.type, 
                 config.icon.drive, 
@@ -841,7 +804,7 @@ function LabelMaker() {
               )}
             </Box>
           )}
-          <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+          <Box sx={styles.textContainer}>
             {config.text.lineContents.map((line, index) => (
               <Typography
                 key={index}
@@ -867,7 +830,7 @@ function LabelMaker() {
           </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={styles.buttonContainer}>
           <Button variant="contained" onClick={exportImage}>
             Export as PNG ({dimensions.height}×{dimensions.width})
           </Button>

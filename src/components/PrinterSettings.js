@@ -11,12 +11,13 @@ import {
   FormControlLabel,
   Checkbox,
 } from '@mui/material';
+import { styles } from '../styles/PrinterSettings.styles';
 
 const tapeWidthOptions = [6, 9, 12, 18, 24, 36];
 
 function PrinterSettings({ config, handlePrinterChange, dimensions }) {
   return (
-    <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
+    <Box sx={styles.container}>
       <Typography variant="h6" gutterBottom>
         Printer Settings
       </Typography>
@@ -44,7 +45,7 @@ function PrinterSettings({ config, handlePrinterChange, dimensions }) {
             ))}
           </Select>
         </FormControl>
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+        <Box sx={styles.lengthContainer}>
           <TextField
             fullWidth
             type="number"
@@ -67,7 +68,7 @@ function PrinterSettings({ config, handlePrinterChange, dimensions }) {
               />
             }
             label="Custom Length"
-            sx={{ mt: -1 }}
+            sx={styles.customLengthCheckbox}
           />
         </Box>
         <Typography variant="body2" color="textSecondary">
