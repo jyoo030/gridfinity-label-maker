@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   Stack,
   Box,
@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import UploadIcon from '@mui/icons-material/Upload';
 import { styles } from '../styles/IconSettings.styles';
+import { generateAutofillText } from '../utils/iconMappings';
 
 const iconOptions = {
   types: ['None', 'Screws', 'Nuts', 'Washers'],
@@ -24,20 +25,52 @@ const iconOptions = {
   washerTypes: ['Flat', 'Fender', 'Split', 'Star Exterior', 'Star Interior'],
 };
 
-const generateAutofillText = (icon) => {
-  switch (icon.type) {
-    case 'Screws':
-      return [`${icon.size}×${icon.length}`, `${icon.head} ${icon.drive}`];
-    case 'Nuts':
-      return [`${icon.size}`, `${icon.nutType}`];
-    case 'Washers':
-      return [`${icon.size}`, `${icon.washerType}`];
-    default:
-      return ['', ''];
-  }
-};
-
 function IconSettings({ config, handleConfigChange, handleCustomIconUpload, handleLinesChange, setConfig }) {
+  // Create a function to handle icon setting changes that should trigger autofill updates
+  const handleIconChange = useCallback((field, value) => {
+    handleConfigChange('icon', field, value);
+    
+    // If autofill is enabled, update the text
+    if (config.icon.autofill) {
+      const newConfig = {
+        ...config,
+        icon: {
+          ...config.icon,
+          [field]: value,
+        },
+      };
+      
+      const lines = newConfig.icon.type === 'Screws' ? '2' : '1';
+      handleLinesChange(lines);
+      const [line1, line2] = generateAutofillText(newConfig.icon);
+      
+      setConfig(prev => ({
+        ...prev,
+        icon: {
+          ...prev.icon,
+          [field]: value,
+        },
+        text: {
+          ...prev.text,
+          lines: newConfig.icon.type === 'Screws' ? 2 : 1,
+          rawLinesInput: lines,
+          lineContents: [
+            {
+              ...prev.text.lineContents[0],
+              text: line1,
+            },
+            ...(newConfig.icon.type === 'Screws' ? [{
+              ...prev.text.lineContents[1],
+              text: line2,
+            }] : []),
+          ],
+        },
+      }));
+    } else {
+      handleConfigChange('icon', field, value);
+    }
+  }, [config, handleConfigChange, handleLinesChange, setConfig]);
+
   return (
     <Box sx={styles.container}>
       <Typography variant="h6" gutterBottom>
@@ -50,10 +83,7 @@ function IconSettings({ config, handleConfigChange, handleCustomIconUpload, hand
             labelId="types-label"
             label="Types"
             value={config.icon.type}
-            onChange={(e) => {
-              handleConfigChange('icon', 'type', e.target.value);
-              handleConfigChange('icon', 'autofill', false);
-            }}
+            onChange={(e) => handleIconChange('type', e.target.value)}
           >
             {iconOptions.types.map((option) => (
               <MenuItem key={option} value={option}>
@@ -71,7 +101,7 @@ function IconSettings({ config, handleConfigChange, handleCustomIconUpload, hand
                 labelId="sizes-label"
                 label="Sizes"
                 value={config.icon.size}
-                onChange={(e) => handleConfigChange('icon', 'size', e.target.value)}
+                onChange={(e) => handleIconChange('size', e.target.value)}
                 MenuProps={{
                   anchorOrigin: {
                     vertical: 'bottom',
@@ -103,7 +133,7 @@ function IconSettings({ config, handleConfigChange, handleCustomIconUpload, hand
                   labelId="washer-type-label"
                   label="Washer Type"
                   value={config.icon.washerType}
-                  onChange={(e) => handleConfigChange('icon', 'washerType', e.target.value)}
+                  onChange={(e) => handleIconChange('washerType', e.target.value)}
                 >
                   {iconOptions.washerTypes.map((option) => (
                     <MenuItem key={option} value={option}>
@@ -121,7 +151,7 @@ function IconSettings({ config, handleConfigChange, handleCustomIconUpload, hand
                   labelId="nut-type-label"
                   label="Nut Type"
                   value={config.icon.nutType}
-                  onChange={(e) => handleConfigChange('icon', 'nutType', e.target.value)}
+                  onChange={(e) => handleIconChange('nutType', e.target.value)}
                 >
                   {iconOptions.nutTypes.map((option) => (
                     <MenuItem key={option} value={option}>
@@ -140,7 +170,7 @@ function IconSettings({ config, handleConfigChange, handleCustomIconUpload, hand
                     labelId="heads-label"
                     label="Heads"
                     value={config.icon.head}
-                    onChange={(e) => handleConfigChange('icon', 'head', e.target.value)}
+                    onChange={(e) => handleIconChange('head', e.target.value)}
                   >
                     {iconOptions.heads.map((option) => (
                       <MenuItem key={option} value={option}>
@@ -156,7 +186,7 @@ function IconSettings({ config, handleConfigChange, handleCustomIconUpload, hand
                     labelId="drives-label"
                     label="Drives"
                     value={config.icon.drive}
-                    onChange={(e) => handleConfigChange('icon', 'drive', e.target.value)}
+                    onChange={(e) => handleIconChange('drive', e.target.value)}
                   >
                     {iconOptions.drives.map((option) => (
                       <MenuItem key={option} value={option}>
@@ -171,7 +201,7 @@ function IconSettings({ config, handleConfigChange, handleCustomIconUpload, hand
                   type="number"
                   label="Length (mm)"
                   value={config.icon.length}
-                  onChange={(e) => handleConfigChange('icon', 'length', e.target.value)}
+                  onChange={(e) => handleIconChange('length', e.target.value)}
                 />
               </>
             )}
