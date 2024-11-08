@@ -40,8 +40,8 @@ function PrinterSettings({ config, handlePrinterChange, dimensions }) {
           <Select
             labelId="tape-width-label"
             label="Tape Width (mm)"
-            value={config.printer.tapeWidthMm}
-            onChange={(e) => handlePrinterChange('tapeWidthMm', 'rawTapeWidth', e.target.value)}
+            value={config.printer.tapeHeightMm}
+            onChange={(e) => handlePrinterChange('tapeHeightMm', 'rawTapeWidth', e.target.value)}
           >
             {tapeWidthOptions.map((width) => (
               <MenuItem key={width} value={width}>
@@ -93,7 +93,7 @@ function PrinterSettings({ config, handlePrinterChange, dimensions }) {
           type="number"
           value={config.printer.margins.rawLeft}
           onChange={(e) => handleMarginChange('left', e.target.value)}
-          inputProps={{ min: 0, max: config.printer.tapeWidthMm / 2, step: 0.5 }}
+          inputProps={{ min: 0, max: config.printer.tapeHeightMm / 2, step: 0.5 }}
           size="small"
         />
         <TextField
@@ -101,7 +101,7 @@ function PrinterSettings({ config, handlePrinterChange, dimensions }) {
           type="number"
           value={config.printer.margins.rawRight}
           onChange={(e) => handleMarginChange('right', e.target.value)}
-          inputProps={{ min: 0, max: config.printer.tapeWidthMm / 2, step: 0.5 }}
+          inputProps={{ min: 0, max: config.printer.tapeHeightMm / 2, step: 0.5 }}
           size="small"
         />
       </Stack>
@@ -112,7 +112,7 @@ function PrinterSettings({ config, handlePrinterChange, dimensions }) {
           type="number"
           value={config.printer.margins.rawTop}
           onChange={(e) => handleMarginChange('top', e.target.value)}
-          inputProps={{ min: 0, max: config.printer.tapeWidthMm / 2, step: 0.5 }}
+          inputProps={{ min: 0, max: config.printer.tapeHeightMm / 2, step: 0.5 }}
           size="small"
         />
         <TextField
@@ -120,7 +120,7 @@ function PrinterSettings({ config, handlePrinterChange, dimensions }) {
           type="number"
           value={config.printer.margins.rawBottom}
           onChange={(e) => handleMarginChange('bottom', e.target.value)}
-          inputProps={{ min: 0, max: config.printer.tapeWidthMm / 2, step: 0.5 }}
+          inputProps={{ min: 0, max: config.printer.tapeHeightMm / 2, step: 0.5 }}
           size="small"
         />
       </Stack>

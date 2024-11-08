@@ -14,7 +14,7 @@ function LabelMaker() {
     printer: {
       dpi: 180,
       tapeLengthMm: 36,
-      tapeWidthMm: 12,
+      tapeHeightMm: 12,
       rawDpi: '180',
       rawTapeLength: '36',
       rawTapeWidth: '12',
@@ -66,7 +66,7 @@ function LabelMaker() {
 
   // Calculate dimensions based on printer settings
   const dimensions = calculatePixelDimensions(
-    config.printer.tapeWidthMm,
+    config.printer.tapeHeightMm,
     config.printer.tapeLengthMm,
     config.printer.dpi
   );
@@ -81,12 +81,12 @@ function LabelMaker() {
     if (config.icon.type !== 'None') {
       if (config.icon.type === 'Screws') {
         if (config.icon.showHeadIcon && config.icon.showDriveIcon) {
-          totalWidth += config.printer.tapeWidthMm / 2;
+          totalWidth += config.printer.tapeHeightMm / 2;
         } else if (config.icon.showHeadIcon || config.icon.showDriveIcon) {
-          totalWidth += config.printer.tapeWidthMm;
+          totalWidth += config.printer.tapeHeightMm;
         }
       } else if (config.icon.showIcon) {
-        totalWidth += config.printer.tapeWidthMm;
+        totalWidth += config.printer.tapeHeightMm;
       }
     }
 
@@ -109,7 +109,7 @@ function LabelMaker() {
 
     return Math.max(totalWidth, 8);
   }, [config.icon.type, config.icon.showHeadIcon, config.icon.showDriveIcon, 
-      config.icon.showIcon, config.printer.tapeWidthMm, config.printer.dpi, 
+      config.icon.showIcon, config.printer.tapeHeightMm, config.printer.dpi, 
       config.text.lineContents, config.text.font, config.printer.margins]);
 
   // Extract complex expressions for useEffect dependencies
@@ -546,8 +546,8 @@ function LabelMaker() {
         previewRef.current.classList.add('export-mode');
 
         // Calculate physical dimensions in mm
-        const labelWidthMm = config.printer.tapeWidthMm;
-        const labelLengthMm = config.printer.tapeLengthMm;
+        const labelHeightMm = config.printer.tapeHeightMm;
+        const labelLengthMm = config.printer.tapeLengthMm + 19;
 
         // Create an invisible iframe
         const iframe = document.createElement('iframe');
@@ -565,36 +565,36 @@ function LabelMaker() {
               <title>Print Label</title>
               <style>
                 @page {
-                  size: ${labelLengthMm}mm ${labelWidthMm}mm;
+                  size: ${labelLengthMm}mm ${labelHeightMm}mm;
                   margin: 0;
                 }
                 body {
                   margin: 0;
                   padding: 0;
                   width: ${labelLengthMm}mm;
-                  height: ${labelWidthMm}mm;
+                  height: ${labelHeightMm}mm;
                   overflow: hidden;
                 }
                 .print-container {
                   width: ${labelLengthMm}mm;
-                  height: ${labelWidthMm}mm;
+                  height: ${labelHeightMm}mm;
                   position: relative;
                   background-color: white;
                   transform-origin: top left;
                   display: flex;
-                  align-items: center;
-                  justify-content: center;
+                  align-items: flex-start;
+                  justify-content: flex-start;
                 }
                 img {
                   width: 100%;
                   height: 100%;
-                  object-fit: fill;
+                  object-fit: contain;
                   display: block;
                 }
                 @media print {
                   html, body {
                     width: ${labelLengthMm}mm;
-                    height: ${labelWidthMm}mm;
+                    height: ${labelHeightMm}mm;
                   }
                   .print-container {
                     page-break-inside: avoid;
@@ -649,7 +649,7 @@ function LabelMaker() {
             iframe.contentWindow.print();
             
             setTimeout(() => {
-              document.body.removeChild(iframe);
+              // document.body.removeChild(iframe);
             }, 1000);
           }, 200);
         };
@@ -660,7 +660,7 @@ function LabelMaker() {
         previewRef.current.classList.remove('export-mode');
       }
     }
-  }, [config.printer.tapeWidthMm, config.printer.tapeLengthMm, config.printer.margins, config.printer.dpi, dimensions]);
+  }, [config.printer.tapeHeightMm, config.printer.tapeLengthMm, config.printer.margins, config.printer.dpi, dimensions]);
 
   return (
     <Stack spacing={3}>
