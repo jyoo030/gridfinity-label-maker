@@ -28,44 +28,37 @@ function LabelPreview({
         ref={previewRef}
         sx={() => styles.preview(dimensions)}
       >
-        {config.icon.type !== 'None' && (
-          <Box sx={() => styles.iconContainer({ config, dimensions })}>
-            {getIconComponent(
-              config.icon.type, 
-              config.icon.drive, 
-              config.icon.head, 
-              config.icon.customIcon,
-              config.icon.showHeadIcon,
-              config.icon.showDriveIcon,
-              config.icon.showIcon,
-              config.icon.nutType,
-              config.icon.washerType
-            )}
+        <Box sx={() => styles.safeAreaOutline(safeArea)} />
+
+        <Box sx={() => styles.contentContainer(safeArea)}>
+          {config.icon.type !== 'None' && (
+            <Box sx={() => styles.iconContainer({ config, dimensions })}>
+              {getIconComponent(
+                config.icon.type, 
+                config.icon.drive, 
+                config.icon.head, 
+                config.icon.customIcon,
+                config.icon.showHeadIcon,
+                config.icon.showDriveIcon,
+                config.icon.showIcon,
+                config.icon.nutType,
+                config.icon.washerType
+              )}
+            </Box>
+          )}
+          <Box sx={styles.textContainer}>
+            {config.text.lineContents.map((line, index) => (
+              <Typography
+                key={index}
+                sx={() => styles.lineText({
+                  ...line,
+                  font: config.text.font
+                })}
+              >
+                {line.text || `Line ${index + 1}`}
+              </Typography>
+            ))}
           </Box>
-        )}
-        <Box sx={styles.textContainer}>
-          {config.text.lineContents.map((line, index) => (
-            <Typography
-              key={index}
-              style={{
-                fontFamily: config.text.font,
-                fontSize: `${line.fontSize}px`,
-                fontWeight: line.bold ? 'bold' : 'normal',
-                fontStyle: line.italic ? 'italic' : 'normal',
-                textDecoration: [
-                  line.underline && 'underline',
-                  line.strikethrough && 'line-through'
-                ].filter(Boolean).join(' '),
-                marginBottom: 0,
-                textAlign: line.textAlign,
-                width: '100%',
-                color: '#282a36',
-                lineHeight: 1,
-              }}
-            >
-              {line.text || `Line ${index + 1}`}
-            </Typography>
-          ))}
         </Box>
       </Box>
 
