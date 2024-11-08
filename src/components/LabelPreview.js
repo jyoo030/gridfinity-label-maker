@@ -11,6 +11,13 @@ function LabelPreview({
   exportImage, 
   handlePrint 
 }) {
+  const safeArea = {
+    left: (config.printer.margins.left * config.printer.dpi) / 25.4,
+    right: (config.printer.margins.right * config.printer.dpi) / 25.4,
+    top: (config.printer.margins.top * config.printer.dpi) / 25.4,
+    bottom: (config.printer.margins.bottom * config.printer.dpi) / 25.4,
+  };
+
   return (
     <Box>
       <Typography variant="h6" gutterBottom>

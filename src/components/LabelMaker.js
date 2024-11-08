@@ -19,6 +19,16 @@ function LabelMaker() {
       rawTapeLength: '36',
       rawTapeWidth: '12',
       customLength: false,
+      margins: {
+        left: 2,
+        right: 2,
+        top: 1,
+        bottom: 1,
+        rawLeft: '2',
+        rawRight: '2',
+        rawTop: '1',
+        rawBottom: '1',
+      },
     },
     icon: {
       type: 'Screws',
@@ -94,12 +104,13 @@ function LabelMaker() {
     const textWidthMm = Math.ceil(maxTextWidth / pixelsPerMm);
     
     totalWidth += textWidthMm;
+    totalWidth += config.printer.margins.left + config.printer.margins.right;
     totalWidth += 2;
 
     return Math.max(totalWidth, 8);
   }, [config.icon.type, config.icon.showHeadIcon, config.icon.showDriveIcon, 
       config.icon.showIcon, config.printer.tapeWidthMm, config.printer.dpi, 
-      config.text.lineContents, config.text.font]);
+      config.text.lineContents, config.text.font, config.printer.margins]);
 
   // Extract complex expressions for useEffect dependencies
   const textLines = config.text.lineContents.map(line => line.text).join('');
@@ -356,7 +367,10 @@ function LabelMaker() {
   ]);
 
   const calculateMaxFontSize = (lines, width, height, font) => {
-    if (lines.length === 0) return 12; // Default size for no text
+    const safeWidth = width - (config.printer.margins.left + config.printer.margins.right) * config.printer.dpi / 25.4;
+    const safeHeight = height - (config.printer.margins.top + config.printer.margins.bottom) * config.printer.dpi / 25.4;
+    
+    if (lines.length === 0) return 12;
     
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -393,7 +407,7 @@ function LabelMaker() {
       }
       
       // Check if we've exceeded either dimension
-      if (maxLineWidth >= width || totalHeight >= height) {
+      if (maxLineWidth >= safeWidth || totalHeight >= safeHeight) {
         return Math.max(6, fontSize - 2); // Return previous size, but not smaller than 6px
       }
       
