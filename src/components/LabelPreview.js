@@ -18,6 +18,11 @@ function LabelPreview({
     bottom: (config.printer.margins.bottom * config.printer.dpi) / 25.4,
   };
 
+  const dimensionsWithSafeArea = {
+    ...dimensions,
+    safeArea,
+  };
+
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
@@ -26,7 +31,7 @@ function LabelPreview({
       
       <Box
         ref={previewRef}
-        sx={() => styles.preview(dimensions)}
+        sx={() => styles.preview(dimensionsWithSafeArea)}
       >
         <Box sx={() => styles.safeAreaOutline(safeArea)} />
 
@@ -64,7 +69,8 @@ function LabelPreview({
 
       <Box sx={styles.buttonContainer}>
         <Button variant="contained" onClick={exportImage}>
-          Export as PNG ({dimensions.height}×{dimensions.width})
+          Export as PNG ({Math.round(dimensions.height - (safeArea.left + safeArea.right))}×
+          {Math.round(dimensions.width - (safeArea.top + safeArea.bottom))})
         </Button>
         <Button 
           variant="contained" 

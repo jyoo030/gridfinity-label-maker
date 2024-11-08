@@ -11,11 +11,14 @@ export const styles = {
     mb: 3,
     bgcolor: '#f8f8f2',
     '&.export-mode': {
+      width: `calc(${dimensions.height}px - ${dimensions.safeArea.left + dimensions.safeArea.right}px)`,
+      height: `calc(${dimensions.width}px - ${dimensions.safeArea.top + dimensions.safeArea.bottom}px)`,
       border: 'none',
       borderRadius: 0,
       bgcolor: '#FFFFFF',
       p: 0,
       m: 0,
+      overflow: 'hidden',
       '& *': {
         color: '#000000 !important',
         fill: '#000000 !important',
@@ -34,7 +37,7 @@ export const styles = {
     height: `calc(100% - ${safeArea.top + safeArea.bottom}px)`,
     outline: '1px dotted rgba(255, 0, 0, 0.5)',
     pointerEvents: 'none',
-    '&.export-mode': {
+    '.export-mode &': {
       display: 'none',
     },
   }),
@@ -47,6 +50,12 @@ export const styles = {
     height: `calc(100% - ${safeArea.top + safeArea.bottom}px)`,
     display: 'flex',
     alignItems: 'center',
+    '.export-mode &': {
+      left: 0,
+      top: 0,
+      width: '100%',
+      height: '100%',
+    },
   }),
   
   iconContainer: ({ config, dimensions, safeArea }) => ({ 
