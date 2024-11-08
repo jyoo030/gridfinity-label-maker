@@ -157,6 +157,19 @@ function LabelMaker() {
   const exportImage = async () => {
     if (previewRef.current) {
       try {
+        // Calculate safe area dimensions
+        const safeArea = {
+          left: (config.printer.margins.left * config.printer.dpi) / 25.4,
+          right: (config.printer.margins.right * config.printer.dpi) / 25.4,
+          top: (config.printer.margins.top * config.printer.dpi) / 25.4,
+          bottom: (config.printer.margins.bottom * config.printer.dpi) / 25.4,
+        };
+
+        const safeDimensions = {
+          width: dimensions.width - (safeArea.top + safeArea.bottom),
+          height: dimensions.height - (safeArea.left + safeArea.right),
+        };
+
         // Add export-mode class before generating image
         previewRef.current.classList.add('export-mode');
 
@@ -187,8 +200,8 @@ function LabelMaker() {
         await Promise.all(iconPromises);
 
         const dataUrl = await toPng(previewRef.current, {
-          width: dimensions.height,
-          height: dimensions.width,
+          width: safeDimensions.height,
+          height: safeDimensions.width,
           style: {
             transform: 'scale(1)',
             margin: 0,
@@ -517,7 +530,19 @@ function LabelMaker() {
   const handlePrint = useCallback(async () => {
     if (previewRef.current) {
       try {
-        // Add export-mode class before generating image
+        // Calculate safe area dimensions
+        const safeArea = {
+          left: (config.printer.margins.left * config.printer.dpi) / 25.4,
+          right: (config.printer.margins.right * config.printer.dpi) / 25.4,
+          top: (config.printer.margins.top * config.printer.dpi) / 25.4,
+          bottom: (config.printer.margins.bottom * config.printer.dpi) / 25.4,
+        };
+
+        const safeDimensions = {
+          width: dimensions.width - (safeArea.top + safeArea.bottom),
+          height: dimensions.height - (safeArea.left + safeArea.right),
+        };
+
         previewRef.current.classList.add('export-mode');
 
         // Calculate physical dimensions in mm
@@ -526,12 +551,10 @@ function LabelMaker() {
 
         // Create an invisible iframe
         const iframe = document.createElement('iframe');
-        iframe.style.visibility = 'hidden';
+        iframe.style.visibility = 'visible';
         iframe.style.position = 'fixed';
         iframe.style.right = '0';
         iframe.style.bottom = '0';
-        iframe.style.width = '0';
-        iframe.style.height = '0';
         document.body.appendChild(iframe);
 
         // Write the print HTML with updated styles
@@ -558,11 +581,14 @@ function LabelMaker() {
                   position: relative;
                   background-color: white;
                   transform-origin: top left;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
                 }
                 img {
                   width: 100%;
                   height: 100%;
-                  object-fit: contain;
+                  object-fit: fill;
                   display: block;
                 }
                 @media print {
@@ -585,10 +611,10 @@ function LabelMaker() {
           </html>
         `);
 
-        // Generate the image
+        // Generate the image using safe dimensions
         const dataUrl = await toPng(previewRef.current, {
-          width: dimensions.height,
-          height: dimensions.width,
+          width: safeDimensions.height,
+          height: safeDimensions.width,
           style: {
             transform: 'scale(1)',
             margin: 0,
@@ -619,11 +645,9 @@ function LabelMaker() {
         img.onload = () => {
           iframe.contentDocument.close();
           
-          // Short delay to ensure styles are applied
           setTimeout(() => {
             iframe.contentWindow.print();
             
-            // Remove iframe after printing
             setTimeout(() => {
               document.body.removeChild(iframe);
             }, 1000);
@@ -636,7 +660,7 @@ function LabelMaker() {
         previewRef.current.classList.remove('export-mode');
       }
     }
-  }, [config.printer.tapeWidthMm, config.printer.tapeLengthMm, dimensions.height, dimensions.width]);
+  }, [config.printer.tapeWidthMm, config.printer.tapeLengthMm, config.printer.margins, config.printer.dpi, dimensions]);
 
   return (
     <Stack spacing={3}>
