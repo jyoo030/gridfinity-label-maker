@@ -32,7 +32,7 @@ function LabelPreview({
 
         <Box sx={() => styles.contentContainer(safeArea)}>
           {config.icon.type !== 'None' && (
-            <Box sx={() => styles.iconContainer({ config, dimensions })}>
+            <Box sx={() => styles.iconContainer({ config, dimensions, safeArea })}>
               {getIconComponent(
                 config.icon.type, 
                 config.icon.drive, 

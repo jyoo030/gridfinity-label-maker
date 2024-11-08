@@ -32,7 +32,7 @@ export const styles = {
     top: safeArea.top,
     width: `calc(100% - ${safeArea.left + safeArea.right}px)`,
     height: `calc(100% - ${safeArea.top + safeArea.bottom}px)`,
-    border: '1px dotted rgba(255, 0, 0, 0.5)',
+    outline: '1px dotted rgba(255, 0, 0, 0.5)',
     pointerEvents: 'none',
     '&.export-mode': {
       display: 'none',
@@ -49,10 +49,11 @@ export const styles = {
     alignItems: 'center',
   }),
   
-  iconContainer: ({ config, dimensions }) => ({ 
+  iconContainer: ({ config, dimensions, safeArea }) => ({ 
     width: config.icon.type === 'Screws' && config.icon.showHeadIcon && config.icon.showDriveIcon ? 
-      dimensions.width / 2 : dimensions.width,
-    height: dimensions.width,
+      (dimensions.width - (safeArea.top + safeArea.bottom)) / 2 : 
+      (dimensions.width - (safeArea.top + safeArea.bottom)),
+    height: dimensions.width - (safeArea.top + safeArea.bottom),
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
