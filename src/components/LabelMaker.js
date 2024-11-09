@@ -268,17 +268,29 @@ function LabelMaker() {
     }));
   };
 
-  // Wrap handlePrinterChange in useCallback
-  const handlePrinterChange = useCallback((field, rawField, value) => {
+  // Update handlePrinterChange to properly handle margins
+  const handlePrinterChange = useCallback((category, field, value, rawField) => {
     setConfig(prev => {
-      const newConfig = {
-        ...prev,
-        printer: {
+      const newConfig = { ...prev };
+
+      if (category === 'margins') {
+        // Handle margin updates
+        newConfig.printer = {
+          ...prev.printer,
+          margins: {
+            ...prev.printer.margins,
+            [field]: value === '' ? 0 : Number(value),
+            [rawField]: value.toString(),
+          }
+        };
+      } else {
+        // Handle other printer settings
+        newConfig.printer = {
           ...prev.printer,
           [rawField]: value,
           [field]: value === '' ? 0 : Number(value),
-        },
       };
+      }
 
       // If we're disabling custom length, immediately calculate and set the required length
       if (field === 'customLength' && value === false) {

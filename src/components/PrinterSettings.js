@@ -18,7 +18,13 @@ const tapeWidthOptions = [6, 9, 12, 18, 24, 36];
 
 function PrinterSettings({ config, handlePrinterChange, dimensions }) {
   const handleMarginChange = (field, value) => {
-    handlePrinterChange('margins', field, value, `raw${field.charAt(0).toUpperCase() + field.slice(1)}`);
+    const stringValue = value === '' ? '0' : value;
+    handlePrinterChange(
+      'margins', 
+      field, 
+      stringValue, 
+      `raw${field.charAt(0).toUpperCase() + field.slice(1)}`
+    );
   };
 
   return (
