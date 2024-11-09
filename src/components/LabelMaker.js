@@ -547,7 +547,7 @@ function LabelMaker() {
 
         // Calculate physical dimensions in mm
         const labelHeightMm = config.printer.tapeHeightMm;
-        const labelLengthMm = config.printer.tapeLengthMm + 19;
+        const labelLengthMm = config.printer.tapeLengthMm;
 
         // Create an invisible iframe
         const iframe = document.createElement('iframe');
