@@ -593,13 +593,13 @@ function LabelMaker() {
                   position: relative;
                   background-color: white;
                   transform-origin: top left;
-                  display: flex;
-                  align-items: flex-start;
-                  justify-content: flex-start;
                 }
                 img {
-                  width: 100%;
-                  height: 100%;
+                  position: absolute;
+                  left: ${config.printer.margins.left}mm;
+                  top: ${config.printer.margins.top}mm;
+                  width: calc(100% - ${config.printer.margins.left + config.printer.margins.right}mm);
+                  height: calc(100% - ${config.printer.margins.top + config.printer.margins.bottom}mm);
                   object-fit: contain;
                   display: block;
                 }
