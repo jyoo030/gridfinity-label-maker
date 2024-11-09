@@ -271,10 +271,8 @@ function LabelMaker() {
   const handlePrinterChange = useCallback((category, field, value, rawField) => {
     setConfig(prev => {
       const newConfig = { ...prev };
-      console.log(category, field, value, rawField);
 
       if (category === 'margins') {
-        console.log("updating margin");
         // Handle margin updates
         newConfig.printer = {
           ...prev.printer,
@@ -285,14 +283,12 @@ function LabelMaker() {
           }
         };
       } else {
-        console.log("updating other printer settings");
         // Handle other printer settings
         newConfig.printer = {
           ...prev.printer,
           [rawField]: value,
           [field]: value === '' ? 0 : Number(value),
       };
-      console.log(newConfig.printer);
       }
 
       // If we're disabling custom length, immediately calculate and set the required length
@@ -376,17 +372,8 @@ function LabelMaker() {
   useEffect(() => {
     if (!config.printer.customLength) {
       const requiredLength = calculateRequiredLength();
-      console.log('Checking length update:', {
-        required: requiredLength,
-        current: config.printer.tapeLengthMm,
-        diff: Math.abs(requiredLength - config.printer.tapeLengthMm),
-        text: textLines,
-        fontSize: textFontSizes,
-        margins: config.printer.margins
-      });
       
       if (Math.abs(requiredLength - config.printer.tapeLengthMm) > 1) {
-        console.log('Updating tape length to:', requiredLength);
         handlePrinterChange('printer', 'tapeLengthMm', requiredLength.toString(), 'rawTapeLength');
       }
     }
@@ -597,7 +584,7 @@ function LabelMaker() {
 
         // Create an invisible iframe
         const iframe = document.createElement('iframe');
-        iframe.style.visibility = 'visible';
+        iframe.style.visibility = 'hidden';
         iframe.style.position = 'fixed';
         iframe.style.right = '0';
         iframe.style.bottom = '0';
@@ -695,7 +682,7 @@ function LabelMaker() {
             iframe.contentWindow.print();
             
             setTimeout(() => {
-              // document.body.removeChild(iframe);
+              document.body.removeChild(iframe);
             }, 1000);
           }, 200);
         };
