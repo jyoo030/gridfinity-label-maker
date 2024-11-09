@@ -414,6 +414,21 @@ function LabelMaker() {
     const safeLength = length - (config.printer.margins.left + config.printer.margins.right) * config.printer.dpi / 25.4;
     const safeHeight = height - (config.printer.margins.top + config.printer.margins.bottom) * config.printer.dpi / 25.4;
     
+    // Account for icon space in available length
+    let availableLength = safeLength;
+    if (config.icon.type !== 'None') {
+      const iconHeightPixels = config.printer.tapeHeightMm * config.printer.dpi / 25.4;
+      if (config.icon.type === 'Screws') {
+        if (config.icon.showHeadIcon && config.icon.showDriveIcon) {
+          availableLength -= iconHeightPixels / 2;
+        } else if (config.icon.showHeadIcon || config.icon.showDriveIcon) {
+          availableLength -= iconHeightPixels;
+        }
+      } else if (config.icon.showIcon) {
+        availableLength -= iconHeightPixels;
+      }
+    }
+    
     if (lines.length === 0) return 12;
     
     const canvas = document.createElement('canvas');
@@ -451,7 +466,7 @@ function LabelMaker() {
       }
       
       // Check if we've exceeded either dimension
-      if (maxLineLength >= safeLength || totalHeight >= safeHeight) {
+      if (maxLineLength >= availableLength || totalHeight >= safeHeight) {
         return Math.max(6, fontSize - 2); // Return previous size, but not smaller than 6px
       }
       
