@@ -71,7 +71,83 @@ function LabelMaker() {
     config.printer.dpi
   );
 
-  // Wrap calculateRequiredLength in useCallback
+  const calculateMaxFontSize = useCallback((lines, length, height, font) => {
+    const safeLength = length - (config.printer.margins.left + config.printer.margins.right) * config.printer.dpi / 25.4;
+    const safeHeight = height - (config.printer.margins.top + config.printer.margins.bottom) * config.printer.dpi / 25.4;
+    
+    // Account for icon space in available length
+    let availableLength = safeLength;
+    if (config.icon.type !== 'None') {
+      const iconHeightPixels = config.printer.tapeHeightMm * config.printer.dpi / 25.4;
+      if (config.icon.type === 'Screws') {
+        if (config.icon.showHeadIcon && config.icon.showDriveIcon) {
+          availableLength -= iconHeightPixels / 2;
+        } else if (config.icon.showHeadIcon || config.icon.showDriveIcon) {
+          availableLength -= iconHeightPixels;
+        }
+      } else if (config.icon.showIcon) {
+        availableLength -= iconHeightPixels;
+      }
+    }
+    
+    if (lines.length === 0) return 12;
+    
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    let fontSize = 8;
+    const maxFontSize = 120;
+    const testString = 'AjgqI'; // String containing tall characters to measure max height
+    
+    while (fontSize < maxFontSize) {
+      let maxLineLength = 0;
+      let totalHeight = 0;
+      
+      // First get the max height for this font size using test string
+      const fontStyle = `${fontSize}px "${font}"`;
+      ctx.font = fontStyle;
+      const heightMetrics = ctx.measureText(testString);
+      const lineHeight = heightMetrics.actualBoundingBoxAscent + heightMetrics.actualBoundingBoxDescent;
+      
+      // Check each line
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const text = line.text || `Line ${i + 1}`; // Use placeholder text if no actual text
+        
+        // Set font properties for length measurement
+        const lineFontStyle = `${line.italic ? 'italic ' : ''}${line.bold ? 'bold ' : ''}${fontSize}px "${font}"`;
+        ctx.font = lineFontStyle;
+        
+        // Measure text length
+        const metrics = ctx.measureText(text);
+        const textLength = metrics.width;
+        
+        maxLineLength = Math.max(maxLineLength, textLength);
+        totalHeight += lineHeight;
+      }
+      
+      // Check if we've exceeded either dimension
+      if (maxLineLength >= availableLength || totalHeight >= safeHeight) {
+        return Math.max(6, fontSize - 2); // Return previous size, but not smaller than 6px
+      }
+      
+      fontSize += 1;
+    }
+    
+    return Math.min(fontSize, maxFontSize);
+  }, [
+    config.printer.margins.left,
+    config.printer.margins.right,
+    config.printer.margins.top,
+    config.printer.margins.bottom,
+    config.printer.dpi,
+    config.printer.tapeHeightMm,
+    config.icon.type,
+    config.icon.showHeadIcon,
+    config.icon.showDriveIcon,
+    config.icon.showIcon
+  ]);
+
   const calculateRequiredLength = useCallback(() => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -360,13 +436,15 @@ function LabelMaker() {
     }
   }, [
     config.text.fitToLabel,
+    config.text.lineContents,
     textLines,
     config.text.lines,
     config.text.font,
     dimensions.height, 
     dimensions.length, 
     textBoldSettings,
-    textItalicSettings
+    textItalicSettings,
+    calculateMaxFontSize
   ]);
 
   useEffect(() => {
@@ -396,72 +474,6 @@ function LabelMaker() {
     calculateRequiredLength,
     handlePrinterChange
   ]);
-
-  const calculateMaxFontSize = (lines, length, height, font) => {
-    const safeLength = length - (config.printer.margins.left + config.printer.margins.right) * config.printer.dpi / 25.4;
-    const safeHeight = height - (config.printer.margins.top + config.printer.margins.bottom) * config.printer.dpi / 25.4;
-    
-    // Account for icon space in available length
-    let availableLength = safeLength;
-    if (config.icon.type !== 'None') {
-      const iconHeightPixels = config.printer.tapeHeightMm * config.printer.dpi / 25.4;
-      if (config.icon.type === 'Screws') {
-        if (config.icon.showHeadIcon && config.icon.showDriveIcon) {
-          availableLength -= iconHeightPixels / 2;
-        } else if (config.icon.showHeadIcon || config.icon.showDriveIcon) {
-          availableLength -= iconHeightPixels;
-        }
-      } else if (config.icon.showIcon) {
-        availableLength -= iconHeightPixels;
-      }
-    }
-    
-    if (lines.length === 0) return 12;
-    
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    let fontSize = 8;
-    const maxFontSize = 120;
-    const testString = 'AjgqI'; // String containing tall characters to measure max height
-    
-    while (fontSize < maxFontSize) {
-      let maxLineLength = 0;
-      let totalHeight = 0;
-      
-      // First get the max height for this font size using test string
-      const fontStyle = `${fontSize}px "${font}"`;
-      ctx.font = fontStyle;
-      const heightMetrics = ctx.measureText(testString);
-      const lineHeight = heightMetrics.actualBoundingBoxAscent + heightMetrics.actualBoundingBoxDescent;
-      
-      // Check each line
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        const text = line.text || `Line ${i + 1}`; // Use placeholder text if no actual text
-        
-        // Set font properties for length measurement
-        const lineFontStyle = `${line.italic ? 'italic ' : ''}${line.bold ? 'bold ' : ''}${fontSize}px "${font}"`;
-        ctx.font = lineFontStyle;
-        
-        // Measure text length
-        const metrics = ctx.measureText(text);
-        const textLength = metrics.width;
-        
-        maxLineLength = Math.max(maxLineLength, textLength);
-        totalHeight += lineHeight;
-      }
-      
-      // Check if we've exceeded either dimension
-      if (maxLineLength >= availableLength || totalHeight >= safeHeight) {
-        return Math.max(6, fontSize - 2); // Return previous size, but not smaller than 6px
-      }
-      
-      fontSize += 1;
-    }
-    
-    return Math.min(fontSize, maxFontSize);
-  };
 
   const getIconComponent = useCallback((iconType, drive, head, customIcon, showHeadIcon, showDriveIcon, showIcon, nutType, washerType) => {
     if (customIcon) {
