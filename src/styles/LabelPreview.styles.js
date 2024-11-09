@@ -1,7 +1,7 @@
 export const styles = {
   preview: (dimensions) => ({
-    width: dimensions.height,
-    height: dimensions.width,
+    width: dimensions.length,
+    height: dimensions.height,
     border: '1px solid #ccc',
     borderRadius: 1,
     position: 'relative',
@@ -11,8 +11,8 @@ export const styles = {
     mb: 3,
     bgcolor: '#f8f8f2',
     '&.export-mode': {
-      width: `calc(${dimensions.height}px - ${dimensions.safeArea.left + dimensions.safeArea.right}px)`,
-      height: `calc(${dimensions.width}px - ${dimensions.safeArea.top + dimensions.safeArea.bottom}px)`,
+      width: `calc(${dimensions.length}px - ${dimensions.safeArea.left + dimensions.safeArea.right}px)`,
+      height: `calc(${dimensions.height}px - ${dimensions.safeArea.top + dimensions.safeArea.bottom}px)`,
       // border: 'none',
       // borderRadius: 0,
       bgcolor: '#FFFFFF',
@@ -60,9 +60,9 @@ export const styles = {
   
   iconContainer: ({ config, dimensions, safeArea }) => ({ 
     width: config.icon.type === 'Screws' && config.icon.showHeadIcon && config.icon.showDriveIcon ? 
-      (dimensions.width - (safeArea.top + safeArea.bottom)) / 2 : 
-      (dimensions.width - (safeArea.top + safeArea.bottom)),
-    height: dimensions.width - (safeArea.top + safeArea.bottom),
+      (dimensions.height - (safeArea.top + safeArea.bottom)) / 2 : 
+      (dimensions.height - (safeArea.top + safeArea.bottom)),
+    height: dimensions.height - (safeArea.top + safeArea.bottom),
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

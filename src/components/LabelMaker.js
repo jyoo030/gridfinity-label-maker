@@ -131,13 +131,13 @@ function LabelMaker() {
 
       // If enabling fitToLabel, calculate and set font sizes
       if (category === 'text' && field === 'fitToLabel' && value === true) {
-        const availableHeight = dimensions.width; // Full height available
-        const availableWidth = dimensions.height; // Full width available
+        const availableHeight = dimensions.height;
+        const availableLength = dimensions.length;
         
         // Calculate max font size considering all lines together
         const maxSize = calculateMaxFontSize(
           newConfig.text.lineContents,
-          availableWidth,
+          availableLength,
           availableHeight,
           newConfig.text.font
         );
@@ -166,8 +166,8 @@ function LabelMaker() {
         };
 
         const safeDimensions = {
-          width: dimensions.width - (safeArea.top + safeArea.bottom),
-          height: dimensions.height - (safeArea.left + safeArea.right),
+          height: dimensions.height - (safeArea.top + safeArea.bottom),
+          length: dimensions.length - (safeArea.left + safeArea.right),
         };
 
         // Add export-mode class before generating image
@@ -200,8 +200,8 @@ function LabelMaker() {
         await Promise.all(iconPromises);
 
         const dataUrl = await toPng(previewRef.current, {
-          width: safeDimensions.height,
-          height: safeDimensions.width,
+          width: safeDimensions.length,
+          height: safeDimensions.height,
           style: {
             transform: 'scale(1)',
             margin: 0,
@@ -323,13 +323,13 @@ function LabelMaker() {
   // Update useEffect for font size recalculation
   useEffect(() => {
     if (config.text.fitToLabel) {
-      const availableHeight = dimensions.width; // Full height available
-      const availableWidth = dimensions.height; // Full width available
+      const availableHeight = dimensions.height;
+      const availableLength = dimensions.length;
       
       // Calculate max font size considering all lines together
       const maxSize = calculateMaxFontSize(
         config.text.lineContents,
-        availableWidth,
+        availableLength,
         availableHeight,
         config.text.font
       );
@@ -352,8 +352,8 @@ function LabelMaker() {
     textLines,
     config.text.lines,
     config.text.font,
-    dimensions.width,
-    dimensions.height,
+    dimensions.height, 
+    dimensions.length, 
     textBoldSettings,
     textItalicSettings
   ]);
@@ -379,8 +379,8 @@ function LabelMaker() {
     handlePrinterChange
   ]);
 
-  const calculateMaxFontSize = (lines, width, height, font) => {
-    const safeWidth = width - (config.printer.margins.left + config.printer.margins.right) * config.printer.dpi / 25.4;
+  const calculateMaxFontSize = (lines, length, height, font) => {
+    const safeLength = length - (config.printer.margins.left + config.printer.margins.right) * config.printer.dpi / 25.4;
     const safeHeight = height - (config.printer.margins.top + config.printer.margins.bottom) * config.printer.dpi / 25.4;
     
     if (lines.length === 0) return 12;
@@ -393,7 +393,7 @@ function LabelMaker() {
     const testString = 'AjgqI'; // String containing tall characters to measure max height
     
     while (fontSize < maxFontSize) {
-      let maxLineWidth = 0;
+      let maxLineLength = 0;
       let totalHeight = 0;
       
       // First get the max height for this font size using test string
@@ -407,20 +407,20 @@ function LabelMaker() {
         const line = lines[i];
         const text = line.text || `Line ${i + 1}`; // Use placeholder text if no actual text
         
-        // Set font properties for width measurement
+        // Set font properties for length measurement
         const lineFontStyle = `${line.italic ? 'italic ' : ''}${line.bold ? 'bold ' : ''}${fontSize}px "${font}"`;
         ctx.font = lineFontStyle;
         
-        // Measure text width
+        // Measure text length
         const metrics = ctx.measureText(text);
-        const textWidth = metrics.width;
+        const textLength = metrics.width;
         
-        maxLineWidth = Math.max(maxLineWidth, textWidth);
+        maxLineLength = Math.max(maxLineLength, textLength);
         totalHeight += lineHeight;
       }
       
       // Check if we've exceeded either dimension
-      if (maxLineWidth >= safeWidth || totalHeight >= safeHeight) {
+      if (maxLineLength >= safeLength || totalHeight >= safeHeight) {
         return Math.max(6, fontSize - 2); // Return previous size, but not smaller than 6px
       }
       
@@ -539,8 +539,8 @@ function LabelMaker() {
         };
 
         const safeDimensions = {
-          width: dimensions.width - (safeArea.top + safeArea.bottom),
-          height: dimensions.height - (safeArea.left + safeArea.right),
+          height: dimensions.height - (safeArea.top + safeArea.bottom),
+          length: dimensions.length - (safeArea.left + safeArea.right),
         };
 
         previewRef.current.classList.add('export-mode');
@@ -613,8 +613,8 @@ function LabelMaker() {
 
         // Generate the image using safe dimensions
         const dataUrl = await toPng(previewRef.current, {
-          width: safeDimensions.height,
-          height: safeDimensions.width,
+          width: safeDimensions.length,
+          height: safeDimensions.height,
           style: {
             transform: 'scale(1)',
             margin: 0,

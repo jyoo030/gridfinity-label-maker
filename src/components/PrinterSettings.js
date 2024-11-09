@@ -77,7 +77,7 @@ function PrinterSettings({ config, handlePrinterChange, dimensions }) {
           />
         </Box>
         <Typography variant="body2" color="textSecondary">
-          Output dimensions: {dimensions.width}px × {dimensions.height}px
+          Output dimensions: {dimensions.height}px × {dimensions.length}px
         </Typography>
       </Stack>
       

@@ -1,11 +1,11 @@
-export const calculatePixelDimensions = (widthMm, lengthMm, dpi) => {
+export const calculatePixelDimensions = (heightMm, lengthMm, dpi) => {
   // Convert mm to inches (1 mm = 0.03937 inches)
-  const widthInches = widthMm * 0.03937;
+  const heightInches = heightMm * 0.03937;
   const lengthInches = lengthMm * 0.03937;
 
   // Calculate pixels (pixels = inches * DPI)
-  const widthPixels = Math.round(widthInches * dpi);
-  const heightPixels = Math.round(lengthInches * dpi);
+  const heightPixels = Math.round(heightInches * dpi);
+  const lengthPixels = Math.round(lengthInches * dpi);
 
-  return { width: widthPixels, height: heightPixels };
+  return { height: heightPixels, length: lengthPixels };
 }; 

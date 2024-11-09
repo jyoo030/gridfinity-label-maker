@@ -69,8 +69,8 @@ function LabelPreview({
 
       <Box sx={styles.buttonContainer}>
         <Button variant="contained" onClick={exportImage}>
-          Export as PNG ({Math.round(dimensions.height - (safeArea.left + safeArea.right))}×
-          {Math.round(dimensions.width - (safeArea.top + safeArea.bottom))})
+          Export as PNG ({Math.round(dimensions.length - (safeArea.left + safeArea.right))}×
+          {Math.round(dimensions.height - (safeArea.top + safeArea.bottom))})
         </Button>
         <Button 
           variant="contained" 
