@@ -75,6 +75,7 @@ export const styles = {
     display: 'flex',
     flexDirection: 'column',
     width: '100%',
+    overflow: 'hidden',
   },
 
   lineText: (line) => ({
@@ -91,6 +92,9 @@ export const styles = {
     width: '100%',
     color: '#282a36',
     lineHeight: 1,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'clip',
   }),
   
   buttonContainer: {
