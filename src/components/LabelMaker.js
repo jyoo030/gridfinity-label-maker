@@ -75,39 +75,38 @@ function LabelMaker() {
   const calculateRequiredLength = useCallback(() => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    let totalWidth = 0;
+    let totalLength = config.printer.margins.left + config.printer.margins.right;
 
     // Calculate icon width if present
     if (config.icon.type !== 'None') {
       if (config.icon.type === 'Screws') {
         if (config.icon.showHeadIcon && config.icon.showDriveIcon) {
-          totalWidth += config.printer.tapeHeightMm / 2;
+          totalLength += config.printer.tapeHeightMm / 2;
         } else if (config.icon.showHeadIcon || config.icon.showDriveIcon) {
-          totalWidth += config.printer.tapeHeightMm;
+          totalLength += config.printer.tapeHeightMm;
         }
       } else if (config.icon.showIcon) {
-        totalWidth += config.printer.tapeHeightMm;
+        totalLength += config.printer.tapeHeightMm;
       }
     }
 
     // Calculate width needed for text
-    let maxTextWidth = 0;
+    let maxTextLength = 0;
     config.text.lineContents.forEach(line => {
       const text = line.text || `Line ${config.text.lineContents.indexOf(line) + 1}`;
       ctx.font = `${line.italic ? 'italic ' : ''}${line.bold ? 'bold ' : ''}${line.fontSize}px "${config.text.font}"`;
       const metrics = ctx.measureText(text);
-      maxTextWidth = Math.max(maxTextWidth, metrics.width);
+      maxTextLength = Math.max(maxTextLength, metrics.width);
     });
 
     // Convert text pixels to mm
     const pixelsPerMm = config.printer.dpi / 25.4;
-    const textWidthMm = Math.ceil(maxTextWidth / pixelsPerMm);
+    const textLengthMm = Math.ceil(maxTextLength / pixelsPerMm);
     
-    totalWidth += textWidthMm;
-    totalWidth += config.printer.margins.left + config.printer.margins.right;
-    totalWidth += 2;
+    totalLength += textLengthMm;
+    totalLength += 2; 
 
-    return Math.max(totalWidth, 8);
+    return Math.max(totalLength, 8);
   }, [config.icon.type, config.icon.showHeadIcon, config.icon.showDriveIcon, 
       config.icon.showIcon, config.printer.tapeHeightMm, config.printer.dpi, 
       config.text.lineContents, config.text.font, config.printer.margins]);
@@ -272,8 +271,10 @@ function LabelMaker() {
   const handlePrinterChange = useCallback((category, field, value, rawField) => {
     setConfig(prev => {
       const newConfig = { ...prev };
+      console.log(category, field, value, rawField);
 
       if (category === 'margins') {
+        console.log("updating margin");
         // Handle margin updates
         newConfig.printer = {
           ...prev.printer,
@@ -284,12 +285,14 @@ function LabelMaker() {
           }
         };
       } else {
+        console.log("updating other printer settings");
         // Handle other printer settings
         newConfig.printer = {
           ...prev.printer,
           [rawField]: value,
           [field]: value === '' ? 0 : Number(value),
       };
+      console.log(newConfig.printer);
       }
 
       // If we're disabling custom length, immediately calculate and set the required length
@@ -373,8 +376,18 @@ function LabelMaker() {
   useEffect(() => {
     if (!config.printer.customLength) {
       const requiredLength = calculateRequiredLength();
+      console.log('Checking length update:', {
+        required: requiredLength,
+        current: config.printer.tapeLengthMm,
+        diff: Math.abs(requiredLength - config.printer.tapeLengthMm),
+        text: textLines,
+        fontSize: textFontSizes,
+        margins: config.printer.margins
+      });
+      
       if (Math.abs(requiredLength - config.printer.tapeLengthMm) > 1) {
-        handlePrinterChange('tapeLengthMm', 'rawTapeLength', requiredLength.toString());
+        console.log('Updating tape length to:', requiredLength);
+        handlePrinterChange('printer', 'tapeLengthMm', requiredLength.toString(), 'rawTapeLength');
       }
     }
   }, [
@@ -387,6 +400,12 @@ function LabelMaker() {
     config.icon.showHeadIcon,
     config.icon.showDriveIcon,
     config.icon.showIcon,
+    config.printer.margins.left,
+    config.printer.margins.right,
+    config.printer.margins.top,
+    config.printer.margins.bottom,
+    config.printer.dpi,
+    config.printer.tapeHeightMm,
     calculateRequiredLength,
     handlePrinterChange
   ]);

@@ -20,9 +20,9 @@ function PrinterSettings({ config, handlePrinterChange, dimensions }) {
   const handleMarginChange = (field, value) => {
     const stringValue = value === '' ? '0' : value;
     handlePrinterChange(
-      'margins', 
-      field, 
-      stringValue, 
+      'margins',
+      field,
+      stringValue,
       `raw${field.charAt(0).toUpperCase() + field.slice(1)}`
     );
   };
@@ -38,7 +38,12 @@ function PrinterSettings({ config, handlePrinterChange, dimensions }) {
           type="number"
           label="DPI"
           value={config.printer.rawDpi}
-          onChange={(e) => handlePrinterChange('dpi', 'rawDpi', e.target.value)}
+          onChange={(e) => handlePrinterChange(
+            'printer',
+            'dpi',
+            e.target.value,
+            'rawDpi'
+          )}
           inputProps={{ min: 100, max: 600 }}
         />
         <FormControl fullWidth variant="outlined">
@@ -47,7 +52,12 @@ function PrinterSettings({ config, handlePrinterChange, dimensions }) {
             labelId="tape-width-label"
             label="Tape Width (mm)"
             value={config.printer.tapeHeightMm}
-            onChange={(e) => handlePrinterChange('tapeHeightMm', 'rawTapeWidth', e.target.value)}
+            onChange={(e) => handlePrinterChange(
+              'printer',
+              'tapeHeightMm',
+              e.target.value,
+              'rawTapeWidth'
+            )}
           >
             {tapeWidthOptions.map((width) => (
               <MenuItem key={width} value={width}>
@@ -62,7 +72,12 @@ function PrinterSettings({ config, handlePrinterChange, dimensions }) {
             type="number"
             label="Tape Length (mm)"
             value={config.printer.rawTapeLength}
-            onChange={(e) => handlePrinterChange('tapeLengthMm', 'rawTapeLength', e.target.value)}
+            onChange={(e) => handlePrinterChange(
+              'printer',
+              'tapeLengthMm',
+              e.target.value,
+              'rawTapeLength'
+            )}
             slotProps={{ 
               input: { 
                 min: 8,
@@ -75,7 +90,12 @@ function PrinterSettings({ config, handlePrinterChange, dimensions }) {
             control={
               <Checkbox
                 checked={Boolean(config.printer.customLength)}
-                onChange={(e) => handlePrinterChange('customLength', 'customLength', e.target.checked)}
+                onChange={(e) => handlePrinterChange(
+                  'printer',
+                  'customLength',
+                  e.target.checked,
+                  'customLength'
+                )}
               />
             }
             label="Custom Length"
