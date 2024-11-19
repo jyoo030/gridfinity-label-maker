@@ -17,12 +17,13 @@ import { styles } from '../styles/IconSettings.styles';
 import { generateAutofillText } from '../utils/iconMappings';
 
 const iconOptions = {
-  types: ['None', 'Screws', 'Nuts', 'Washers'],
+  types: ['None', 'Screws', 'Nuts', 'Washers', 'Inserts'],
   sizes: ['M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'M10', 'M12', 'M14', 'M16', 'M18', 'M20'],
   heads: ['Flat', 'Hex', 'Pan', 'Round'],
   drives: ['Hex', 'Phillips', 'Slotted', 'Square', 'Torx'],
   nutTypes: ['Standard', 'Lock', 'Cap'],
   washerTypes: ['Flat', 'Fender', 'Split', 'Star Exterior', 'Star Interior'],
+  insertTypes: ['Heat', 'Wood'],
 };
 
 function IconSettings({ config, handleConfigChange, handleCustomIconUpload, handleLinesChange, setConfig }) {
@@ -136,6 +137,24 @@ function IconSettings({ config, handleConfigChange, handleCustomIconUpload, hand
                   onChange={(e) => handleIconChange('washerType', e.target.value)}
                 >
                   {iconOptions.washerTypes.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+
+            {config.icon.type === 'Inserts' && (
+              <FormControl fullWidth variant="outlined">
+                <InputLabel id="insert-type-label">Insert Type</InputLabel>
+                <Select
+                  labelId="insert-type-label"
+                  label="Insert Type"
+                  value={config.icon.insertType}
+                  onChange={(e) => handleIconChange('insertType', e.target.value)}
+                >
+                  {iconOptions.insertTypes.map((option) => (
                     <MenuItem key={option} value={option}>
                       {option}
                     </MenuItem>

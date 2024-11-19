@@ -27,6 +27,11 @@ import {
   StarInteriorWasher,
 } from '../images/washers';
 
+import {
+  HeatInsert,
+  WoodInsert,
+} from '../images/inserts';
+
 export const driveIcons = {
   Phillips: PhillipsDrive,
   Slotted: FlatDrive,
@@ -56,6 +61,11 @@ export const washerIcons = {
   'Star Interior': StarInteriorWasher,
 };
 
+export const insertIcons = {
+  Heat: HeatInsert,
+  Wood: WoodInsert,
+};
+
 export const generateAutofillText = (icon) => {
   switch (icon.type) {
     case 'Screws':
@@ -64,6 +74,8 @@ export const generateAutofillText = (icon) => {
       return [`${icon.size}`, `${icon.nutType}`];
     case 'Washers':
       return [`${icon.size}`, `${icon.washerType}`];
+    case 'Inserts':
+      return [`${icon.size}`, `${icon.insertType}`];
     default:
       return ['', ''];
   }

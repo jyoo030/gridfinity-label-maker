@@ -7,7 +7,7 @@ import PrinterSettings from './PrinterSettings';
 import TextSettings from './TextSettings';
 import LabelPreview from './LabelPreview';
 import { styles } from '../styles/LabelMaker.styles';
-import { driveIcons, headIcons, nutIcons, washerIcons } from '../utils/iconMappings';
+import { driveIcons, headIcons, nutIcons, washerIcons, insertIcons } from '../utils/iconMappings';
 
 function LabelMaker() {
   const [config, setConfig] = useState({
@@ -42,6 +42,7 @@ function LabelMaker() {
       showIcon: true,
       nutType: 'Standard',
       washerType: 'Flat',
+      insertType: 'Heat',
     },
     text: {
       font: 'Arial',
@@ -475,7 +476,7 @@ function LabelMaker() {
     handlePrinterChange
   ]);
 
-  const getIconComponent = useCallback((iconType, drive, head, customIcon, showHeadIcon, showDriveIcon, showIcon, nutType, washerType) => {
+  const getIconComponent = useCallback((iconType, drive, head, customIcon, showHeadIcon, showDriveIcon, showIcon, nutType, washerType, insertType) => {
     if (customIcon) {
       return (
         <Box
@@ -492,6 +493,19 @@ function LabelMaker() {
     }
 
     switch (iconType) {
+      case 'Inserts':
+        return showIcon ? (
+          <Box
+            component="img"
+            src={insertIcons[insertType]}
+            alt={`${insertType} insert icon`}
+            sx={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+            }}
+          />
+        ) : null;
       case 'Washers':
         return showIcon ? (
           <Box

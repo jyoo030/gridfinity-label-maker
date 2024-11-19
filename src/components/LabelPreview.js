@@ -47,7 +47,8 @@ function LabelPreview({
                 config.icon.showDriveIcon,
                 config.icon.showIcon,
                 config.icon.nutType,
-                config.icon.washerType
+                config.icon.washerType,
+                config.icon.insertType
               )}
             </Box>
           )}
